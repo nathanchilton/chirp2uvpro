@@ -36,6 +36,11 @@ todowrite: {"todos": [{"content": "task description", "status": "pending", "prio
   - priority: one of "high", "medium", "low"
   - CRITICAL: todos MUST be an array [...], NEVER a string "[...]"
 
+EXECUTION DISCIPLINE:
+- Do NOT narrate what you are about to do. Do NOT say "I will now...", "Let me proceed to...", or "Next, I'll...". Instead, IMMEDIATELY call the tool.
+- After each tool call, if more work remains, call the next tool immediately. Do not pause to summarize progress between steps unless the task is fully complete.
+- Every word you spend describing your next action is wasted — just DO it.
+
 IMPORTANT:
 - bash REQUIRES both "command" AND "description" parameters. Always include both.
 - Use camelCase for all parameter names: filePath, oldString, newString, replaceAll
