@@ -60,72 +60,9 @@ def convert_paste():
                 ('pasted_content', output_filename, 'success', warning)
             )
         
-        return jsonify({
-            'message': 'Conversion successful',
-            'output_filename': output_filename,
-            'warning': warning
-        }), 200
-        
     except ConversionError as e:
-        return jsonify({'error': str(e)}), 400
+        return f'<div style="color: #ff4d4d;"><strong>Error:</strong> {str(e)}</div>', 400
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@api_bp.route('/convert/file/<filename>', methods=['POST'])
-def convert_file(filename):
-    file_path = os.path.join(UPLOAD_FOLDER, filename)
-    
-    if not os.path.exists(file_path):
-        return jsonify({'error': 'File not found'}), 404
-    
-    try:
-        with open(file_path, 'r') as f:
-            csv_content = f.read()
-            
-        output_csv, warning = chirp_to_btech(csv_content)
-        
-        output_filename = f"converted_{uuid.uuid4()}.csv"
-        output_path = os.path.join(UPLOAD_FOLDER, output_filename)
-        
-        with open(output_path, 'w') as f:
-            f.write(output_csv)
-            
-        # Log to history
-        conn = get_db_connection()
-        with conn:
-            conn.execute(
-                'INSERT INTO conversion_history (input_filename, output_filename, status, warning) VALUES (?, ?, ?, ?)',
-                (filename, output_filename, 'success', warning)
-            )
-            
-        return jsonify({
-            'message': 'File conversion successful',
-            'output_filename': output_filename,
-            'warning': warning
-        }), 200
-        
-    except ConversionError as e:
-        return jsonify({'error': str(e)}), 400
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@api_bp.route('/history', methods=['GET'])
-def get_history():
-    conn = get_db_connection()
-    conn.row_factory = sqlite3.Row
-    cursor = conn.execute('SELECT * FROM conversion_history ORDER BY timestamp DESC LIMIT 50')
-    history = [dict(row) for row in cursor.fetchall()]
-    conn.close()
-    return jsonify(history), 200
-
-@api_bp.route('/history/<int:history_id>', methods=['DELETE'])
-def delete_history_item(history_id):
-    try:
-        conn = get_db_connection()
-        with conn:
-            conn.execute('DELETE FROM conversion_history WHERE id = ?', (history_id,))
-        return jsonify({'message': 'History item deleted'}), 200
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return f'<div style="color: #ff4d4d;"><strong>Unexpected Error:</strong> {str(e)}</div>', 500
 
 
