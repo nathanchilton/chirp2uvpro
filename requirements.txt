@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+python-multipart
+pandas
+sqlalchemy
+jinja2
+htmx
+python-dotenv
+pytest
+playwright
+pytest-asyncio
