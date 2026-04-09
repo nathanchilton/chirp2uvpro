@@ -21,8 +21,8 @@ def converter_ui():
     return '''
     <div class="converter-ui">
         <h3 class="converter-title">Convert CSV Content</h3>
-        <form hx-post="/convert" hx-target="#result" hx-swap="innerHTML" hx-indicator="#loading">
-            <textarea name="csv_content" rows="10" style="width: 100%; margin-bottom: 10px;" placeholder="Paste CSV content here..." required></textarea>
+        <form hx-post="/api/convert/paste" hx-target="#result" hx-swap="innerHTML" hx-indicator="#loading">
+            <textarea name="csv_content" rows="10" style="width: 100%; margin-bottom: 10px;" placeholder="Paste CHIRP CSV content here..." required></textarea>
             <br>
             <button type="submit">Convert to BTECH</button>
         </form>
@@ -33,27 +33,17 @@ def converter_ui():
     </div>
     '''
 
-@app.route('/convert', methods=['POST'])
-def convert():
-    csv_content = request.form.get('csv_content')
-    if not csv_content:
-        return "Error: No content provided."
-    
-    try:
-        output_csv, warning = chirp_to_btech(csv_content)
-        result_msg = "Conversion successful!"
-        if warning:
-            result_msg += f"\n\nWARNING: {warning}"
-        
-        # In a real app, we'd save this to a file or provide a download link.
-        # For now, just show success and a snippet.
-        snippet = output_csv[:500] + "..." if len(output_csv) > 500 else output_csv
-        return f"{result_msg}\n\nPreview:\n{snippet}"
-        
-    except ConversionError as e:
-        return f"Conversion Error: {str(e)}"
-    except Exception as e:
-        return f"Unexpected Error: {str(e)}"
+@app.route('/converter-file-ui', methods=['GET'])
+def converter_file_ui():
+    return '''
+    <div class="converter-file-ui">
+        <h3 class="converter-title">Convert Uploaded File</h3>
+        <div id="file-selection">
+            <!-- This could be populated by fetching uploaded files -->
+            <p>Select a file to convert.</p>
+        </div>
+    </div>
+    '''
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
