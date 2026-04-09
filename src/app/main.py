@@ -5,12 +5,12 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from flask import Flask, render_template, request, send_file
 import io
 from converter.logic import chirp_to_btech, btech_to_chirp, ConversionError
-
-
+from api.routes import api_bp
 
 app = Flask(__name__, 
-            static_folder='../static', 
-            template_folder='../templates')
+            static_folder='static', 
+            template_folder='templates')
+app.register_blueprint(api_bp, url_prefix='/api')
 
 @app.route('/')
 def index():
@@ -20,12 +20,13 @@ def index():
 def converter_ui():
     return '''
     <div class="converter-ui">
-        <h3>Convert CSV Content</h3>
-        <form hx-post="/convert" hx-target="#result" hx-swap="innerHTML">
-            <textarea name="csv_content" rows="10" style="width: 100%; margin-bottom: 10px;" placeholder="Paste CSV content here..."></textarea>
+        <h3 class="converter-title">Convert CSV Content</h3>
+        <form hx-post="/convert" hx-target="#result" hx-swap="innerHTML" hx-indicator="#loading">
+            <textarea name="csv_content" rows="10" style="width: 100%; margin-bottom: 10px;" placeholder="Paste CSV content here..." required></textarea>
             <br>
             <button type="submit">Convert to BTECH</button>
         </form>
+        <div id="loading" class="htmx-indicator">Converting...</div>
         <div id="result" style="margin-top: 20px; white-space: pre-wrap; text-align: left; font-size: 0.8rem; max-height: 200px; overflow: auto; border: 1px solid #ccc; padding: 5px;">
             Result will appear here.
         </div>
@@ -56,3 +57,4 @@ def convert():
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
+
