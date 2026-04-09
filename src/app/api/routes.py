@@ -118,4 +118,14 @@ def get_history():
     conn.close()
     return jsonify(history), 200
 
+@api_bp.route('/history/<int:history_id>', methods=['DELETE'])
+def delete_history_item(history_id):
+    try:
+        conn = get_db_connection()
+        with conn:
+            conn.execute('DELETE FROM conversion_history WHERE id = ?', (history_id,))
+        return jsonify({'message': 'History item deleted'}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 
