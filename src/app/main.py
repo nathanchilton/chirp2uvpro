@@ -37,10 +37,15 @@ def converter_ui():
 def converter_file_ui():
     return '''
     <div class="converter-file-ui">
-        <h3 class="converter-title">Convert Uploaded File</h3>
-        <div id="file-selection">
-            <!-- This could be populated by fetching uploaded files -->
-            <p>Select a file to convert.</p>
+        <h3 class="converter-title">Upload and Convert CSV</h3>
+        <form hx-post="/api/convert/upload" hx-encoding="multipart/form-data" hx-target="#upload-result" hx-swap="innerHTML" hx-indicator="#loading">
+            <input type="file" name="file" accept=".csv" required>
+            <br><br>
+            <button type="submit">Upload and Convert</button>
+        </form>
+        <div id="loading" class="htmx-indicator">Uploading and converting...</div>
+        <div id="upload-result" style="margin-top: 20px; white-space: pre-wrap; text-align: left; font-size: 0.8rem; max-height: 200px; overflow: auto; border: 1px solid #ccc; padding: 5px;">
+            Upload a file to begin.
         </div>
     </div>
     '''
