@@ -22,7 +22,8 @@ def index():
 
 @app.route('/converter-ui')
 def converter_ui():
-    return render_template('partials/converter_ui.html')
+    mode = request.args.get('mode', 'chirp_to_btech')
+    return render_template('partials/converter_ui.html', mode=mode)
 
 @app.route('/converter-file-ui', methods=['GET'])
 def converter_file_ui():

@@ -140,7 +140,7 @@ def convert_paste(direction='chirp_to_btech'):
         <div class="alert alert-success mb-0">
             Conversion successful!
             <div class="mt-2">
-                <a href="{download_url}" class="btn btn-sm btn-success" download>Download Converted File</a>
+                <a href="{download_url}" class="btn btn-sm btn-success" download="{output_filename}">Download Converted File</a>
             </div>
         </div>
         {warning_html}
