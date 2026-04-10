@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CHIRP to BTECH Converter</title>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <header>
+        <h1>CHIRP to BTECH Converter</h1>
+    </header>
+
+    <main>
+        <section id="converter-section">
+            <!-- This will be populated by the /converter-ui route -->
+            <div hx-get="/converter-ui" hx-trigger="load">
+                Loading converter...
+            </div>
+        </section>
+
+        <hr>
+
+        <section id="history-section">
+            <h2 class="history-header">
+                Conversion History
+                <button hx-get="/api/history/fragment" hx-target="#history-list" hx-swap="innerHTML" class="history-refresh-btn">Refresh</button>
+            </h2>
+            <div id="history-list" hx-get="/api/history/fragment" hx-trigger="load">
+                <p>Loading history...</p>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 CHIRP to BTECH Converter</p>
+    </footer>
+
+    <script src="/static/js/main.js"></script>
+</body>
+</html>
