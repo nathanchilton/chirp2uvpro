@@ -1,0 +1,17 @@
+
+<ul class="list-group history-list">
+    {% for row in history_items %}
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+        <div>
+            <span class="badge bg-secondary me-2">{{ row[2] }}</span>
+            <a href="/download/{{ row[1] }}" class="text-decoration-none">{{ row[0] }} &rarr; {{ row[1] }}</a>
+            {% if row[3] %}
+            <div class="small text-warning mt-1">{{ row[3] }}</div>
+            {% endif %}
+            <div class="small text-muted">{{ row[4] }}</div>
+        </div>
+    </li>
+    {% else %}
+    <li class="list-group-item text-muted">No conversion history found.</li>
+    {% endfor %}
+</ul>>
