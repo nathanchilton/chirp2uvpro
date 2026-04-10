@@ -13,7 +13,7 @@ def init_db():
     conn = get_db_connection()
     with conn:
         conn.execute('''
-            CREATE TABLE IF NOT EXISTS conversion_history (
+            CREATE TABLE IF NOT EXISTS conversion_sessions (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
                 input_filename TEXT,
