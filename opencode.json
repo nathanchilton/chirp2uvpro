@@ -7,7 +7,6 @@
       "options": {
         "baseURL": "http://127.0.0.1:8089/v1",
         "toolParser": [
-          { "type": "raw-function-call" },
           { "type": "json" }
         ]
       },
@@ -16,7 +15,7 @@
           "name": "Gemma 4 26B",
           "tool_call": true,
           "limit": {
-            "context": 49152,
+            "context": 32768,
             "output": 16384
           }
         },
@@ -31,10 +30,15 @@
       }
     }
   },
+  "compaction": {
+    "auto": true,
+    "prune": false,
+    "reserved": 12000
+  },
   "model": "llama/gemma4-26b",
   "agent": {
     "build": {
-      "steps": 50,
+      "steps": 75,
       "prompt": "{file:./.opencode/prompts/build.txt}",
       "permission": {
         "read": "allow",
