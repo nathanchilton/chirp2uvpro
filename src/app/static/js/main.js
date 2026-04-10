@@ -5,7 +5,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // This file is being kept for any specialized client-side behavior that HTMX cannot easily handle.
 });
 
-
                 const data = await response.json();
 
                 if (response.ok) {
