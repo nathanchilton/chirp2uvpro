@@ -1,7 +1,7 @@
 import os
 import sqlite3
 import uuid
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, render_template
 from converter.logic import chirp_to_btech, btech_to_chirp, ConversionError
 from database import get_db_connection
 
@@ -81,6 +81,10 @@ def upload_file():
 def convert_paste_btech():
     return convert_paste(direction='btech_to_chirp')
 
+@api_bp.route('/convert/paste-chirp', methods=['POST'])
+def convert_paste_chirp():
+    return convert_paste(direction='chirp_to_btech')
+
 @api_bp.route('/convert/paste', methods=['POST'])
 def convert_paste(direction='chirp_to_btech'):
     # Check if it's a form submission (HTMX) or JSON
@@ -103,7 +107,6 @@ def convert_paste(direction='chirp_to_btech'):
         csv_content = data['csv_content']
         direction = data.get('direction', direction)
 
-
     if not csv_content:
         return '<div class="alert alert-danger mb-0">No content provided</div>', 400
 
@@ -111,7 +114,7 @@ def convert_paste(direction='chirp_to_btech'):
     try:
         if direction == 'chirp_to_btech':
             output_csv, warning = chirp_to_btech(csv_content)
-        elif direction == 'b2ch':
+        elif direction == 'btech_to_chirp':
             output_csv, warning = btech_to_chirp(csv_content)
         else:
             return '<div class="alert alert-danger mb-0">Invalid direction</div>', 400
@@ -145,10 +148,24 @@ def convert_paste(direction='chirp_to_btech'):
         </div>
         {warning_html}
         ''', 200
+
+
+
         
     except ConversionError as e:
         return f'<div class="alert alert-danger mb-0">Conversion Error: {str(e)}</div>', 400
     except Exception as e:
         return f'<div class="alert alert-danger mb-0">Error: {str(e)}</div>', 500
+
+@api_bp.route('/history/fragment')
+def history_fragment():
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute('SELECT input_filename, output_filename, status, warning, datetime(timestamp, \'localtime\') as timestamp FROM conversion_history ORDER BY timestamp DESC')
+    rows = cur.fetchall()
+    conn.close()
+
+    return render_template('partials/history_fragment.html', history_items=rows)
+
 
 
