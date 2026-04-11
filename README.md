@@ -19,11 +19,37 @@ This application provides a bi-directional conversion tool for GMRs/radio logs, 
 
 ## 🛠️ Technology Stack
 
-*   **Backend:** Python
+*   **Backend:** Python (Flask)
 *   **Frontend:** HTMX
-*   **Styling:** Modern CSS Framework
+*   **Styling:** Modern CSS Framework (Water.css)
 *   **Database:** SQLite
 *   **Testing:** Pytest, Playwright
+
+## ⚙️ Installation & Setup
+
+1.  **Clone the repository:**
+    ```bash
+    git clone <repository-url>
+    cd chirp2uvpro
+    ```
+
+2.  **Create and activate a virtual environment:**
+    ```bash
+    python -m venv venv
+    source venv/bin/activate  # On macOS/Linux
+    # venv\Scripts\activate  # On Windows
+    ```
+
+3.  **Install dependencies:**
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+4.  **Run the application:**
+    ```bash
+    python src/app/main.py
+    ```
+    The application will be available at `http://127.0.0.1:5000`.
 
 ## 📚 Usage
 
@@ -32,6 +58,33 @@ This application provides a bi-directional conversion tool for GMRs/radio logs, 
 3.  **View Results:** Download the converted file containing the results.
 4.  **History:** Review the SQLite database for a record of past conversions.
 
-## 📚 Documentation
-
 For details on the required CSV formats, please refer to the official guide: [https://baofengtech.com/your-complete-channel-import-guide-for-gmrs-pro-uv-pro/](https://baofengtech.com/your-complete-channel-import-guide-for-gmrs-pro-uv-pro/)
+
+## 🧪 Running Tests
+
+### Unit Tests
+Run the unit tests using pytest:
+```bash
+source venv/bin/activate
+pytest tests/unit
+```
+
+### End-to-End (E2E) Tests
+Run the Playwright-based E2E tests:
+```bash
+source venv/bin/activate
+pytest tests/e2e
+```
+
+## 📂 Project Structure
+
+*   `src/app/`: Main application logic and routes.
+*   `src/app/templates/`: HTML templates and partials.
+*   `src/database/`: Database connection and management.
+*   `src/converter/`: Core conversion logic.
+*   `tests/`: Test suites (Unit and E2E).
+*   `uploads/`: Directory for uploaded and processed files.
+
+## 🛡️ License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
