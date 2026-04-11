@@ -52,7 +52,6 @@ Thumbs.db
 
 # Project specific
 *.csv
-*.html
 *.md
 repro_debug.py
 reproduce_issue.py

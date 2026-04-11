@@ -111,7 +111,7 @@ def convert_paste(direction='chirp_to_btech'):
     try:
         if direction == 'chirp_to_btech':
             output_csv, warning = chirp_to_btech(csv_content)
-        elif direction == 'btech_to_chirp':
+        elif direction == 'b2ch':
             output_csv, warning = btech_to_chirp(csv_content)
         else:
             return '<div class="alert alert-danger mb-0">Invalid direction</div>', 400

@@ -85,7 +85,7 @@ def test_conversion_flow_paste_btech_to_chirp(page: Page):
     page.goto(BASE_URL)
     
     # 2. Switch to BTECH mode
-    page.click("input[value='btech_to_chirp']")
+    page.click("input[value='b2ch']")
 
     # 3. Prepare sample BTECH content
     btech_content = "1,Test,146.520,0,None,None,0,FM\n2,Test2,146.550,0,None,None,0,FM"
