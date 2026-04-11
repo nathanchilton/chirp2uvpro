@@ -16,7 +16,7 @@ def server():
     env = os.environ.copy()
     env["FLASK_APP"] = "src.app.main:app"
     env["PYTHONPATH"] = os.getcwd()
-    process = subprocess.Popen(["python3", "-m", "flask", "run", f"--port={TEST_PORT}"], env=env)
+    process = subprocess.Popen(["./venv/bin/python", "-m", "flask", "run", f"--port={TEST_PORT}"], env=env)
     
     # Wait for the server to be ready
     timeout = 15
@@ -85,7 +85,7 @@ def test_conversion_flow_paste_btech_to_chirp(page: Page):
     page.goto(BASE_URL)
     
     # 2. Switch to BTECH mode
-    page.click("input[value='b2ch']")
+    page.click("input[value='btech_to_chirp']")
 
     # 3. Prepare sample BTECH content
     btech_content = "1,Test,146.520,0,None,None,0,FM\n2,Test2,146.550,0,None,None,0,FM"
