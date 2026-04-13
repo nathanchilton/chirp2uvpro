@@ -12,12 +12,11 @@ services:
 
   cloudflare-tunnel:
     image: cloudflare/cloudflared:latest
+    network_mode: "host"
     restart: unless-stopped
     command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
     depends_on:
       - chirp-converter
-    networks:
-      - converter-network
     environment:
       - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
 

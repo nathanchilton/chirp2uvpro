@@ -49,23 +49,25 @@ This application provides a bi-directional conversion tool for GMRs/radio logs, 
     ```bash
     python src/app/main.py
     ```
-    The application will be available at `http://127.0.0.1:5000`.
+    The application will be available at `http://localhost:5000`.
 
 ## 🐳 Docker Deployment
 
-You can run the application using Docker and Docker Compose.
+You can run the application using Docker and Docker Compose. This setup includes the application itself and a Cloudflare Tunnel for secure remote access.
 
-1.  **Create a `.env` file** with your Cloudflare Tunnel token:
+1.  **Create a `.env` file** in the root directory with your Cloudflare Tunnel token:
     ```env
     CLOUDFLARE_TUNNEL_TOKEN=your_token_here
     ```
 
-2.  **Build and run the container:**
+2.  **Build and run the containers:**
     ```bash
-    docker-compose up --build -d
+    sudo docker-compose up --build -d
     ```
 
-The application will be available at `http://localhost:5000`.
+Once started, the application is accessible at `http://localhost:5000` on your local network, and via the public URL configured in your Cloudflare Dashboard (pointing to `http://localhost:5000`).
+
+**Note:** The Cloudflare Tunnel service is configured with `network_mode: "host"` to allow it to reach the Flask application running on the host's port 5000.
 
 ## 📚 Usage
 
@@ -74,14 +76,14 @@ The application will be available at `http://localhost:5000`.
 3.  **View Results:** Download the converted file containing the results.
 4.  **History:** Review the SQLite database for a record of past conversions.
 
-For details on the required CSV formats, please refer to the official guide: [https://baofengtech.com/your-complete-channel-import-guide-for-gmrs-pro-uv-pro/](https://baofengtech.com/your-complete-channel-import-guide-for-gmrs-pro-uv-pro/)
+For details on the required CSV formats, please refer to the official guide: [https://baofengtech.com/your-complete-channel-import-guide-for-gmrs-pro-uv-pro/](https://baofengtech/your-complete-channel-import-guide-for-gmrs-pro-uv-pro/)
 
 ## 🧪 Running Tests
 
 ### Unit Tests
 Run the unit tests using pytest:
 ```bash
-source venv/bin/activate
+source venv/binenter/activate
 pytest tests/unit
 ```
 
