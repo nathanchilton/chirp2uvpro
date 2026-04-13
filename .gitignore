@@ -51,8 +51,5 @@ coverage.xml
 Thumbs.db
 
 # Project specific
-*.csv
-*.md
-repro_debug.py
-reproduce_issue.py
-session-ses_*.md
+*.db
+*.log
