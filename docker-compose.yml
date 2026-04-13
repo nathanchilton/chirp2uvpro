@@ -1,0 +1,29 @@
+services:
+  chirp-converter:
+    build: .
+    container_name: chirp-converter
+    ports:
+      - "5000:5000"
+    restart: unless-stopped
+    volumes:
+      - ./uploads:/app/uploads
+    networks:
+      - converter-network
+
+  cloudflare-tunnel:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
+    depends_on:
+      - chirp-converter
+    networks:
+      - converter-network
+    environment:
+      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
+
+networks:
+  converter-network:
+    driver: bridge
+
+
+

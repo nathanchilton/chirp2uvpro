@@ -4,7 +4,7 @@ A web application built with Python, HTMX, and a modern CSS framework to convert
 
 ## 🚀 Overview
 
-This application provides a bi-directional conversion tool for GMRs/radio logs, allowing users to seamlessly convert between the CHIRP format (from sources like chirpmyradio.com) and the format used by the BTECH UV-Pro.
+This application provides a bi-directional conversion tool for GMRs/radio logs, allowing users to seamlessly convert between the CHint format (from sources like chirpmyradio.com) and the format used by the BTECH UV-Pro.
 
 ## ✨ Features
 
@@ -50,6 +50,22 @@ This application provides a bi-directional conversion tool for GMRs/radio logs, 
     python src/app/main.py
     ```
     The application will be available at `http://127.0.0.1:5000`.
+
+## 🐳 Docker Deployment
+
+You can run the application using Docker and Docker Compose.
+
+1.  **Create a `.env` file** with your Cloudflare Tunnel token:
+    ```env
+    CLOUDFLARE_TUNNEL_TOKEN=your_token_here
+    ```
+
+2.  **Build and run the container:**
+    ```bash
+    docker-compose up --build -d
+    ```
+
+The application will be available at `http://localhost:5000`.
 
 ## 📚 Usage
 

@@ -1,0 +1,11 @@
+venv/
+.git/
+.gitignore
+__pycache__/
+*.pyc
+tests/
+.pytest_cache/
+*.db
+*.log
+.docker-compose.yml.swp
+uploads/
