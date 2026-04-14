@@ -58,7 +58,7 @@ def format_power_to_chirp(p_str):
     p_map = {"H": "4.0W", "M": "2.5W", "L": "1.0W"}
     return p_map.get(p_str, p_str)
 
-def clipboard_to_internal(text_content: str) -> list:
+def clipboard_to_internal_wrapper(text_content: str) -> list:
     if not text_content or not text_content.strip():
         return []
 

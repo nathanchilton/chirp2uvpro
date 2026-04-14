@@ -62,8 +62,11 @@ You can run the application using Docker and Docker Compose. This setup includes
 
 2.  **Build and run the containers:**
     ```bash
+    # If you are not in the docker group, you may need to use sudo
     sudo docker-compose up --build -d
     ```
+
+**Note:** If you have recently added your user to the `docker` group, you will need to log out and back in (or start a new session) for the changes to take effect. You can use `sudo` as a temporary workaround.
 
 Once started, the application is accessible at `http://localhost:5000` on your local network, and via the public URL configured in your Cloudflare Dashboard (pointing to `http://localhost:5000`).
 
