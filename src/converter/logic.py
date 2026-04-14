@@ -155,8 +155,10 @@ def chirp_to_btech(csv_content: str) -> tuple[str, str | None]:
         if df.empty:
             return "", None
         
+        status_msg = None
         if len(df) > 30:
-            return "", "Truncated"
+            df = df.head(30)
+            status_msg = "Truncated"
             
         channels = []
         for _, row in df.iterrows():
@@ -209,7 +211,7 @@ def chirp_to_btech(csv_content: str) -> tuple[str, str | None]:
             
             channels.append(ch)
             
-        return internal_to_btech_csv(channels), None
+        return internal_to_btech_csv(channels), status_msg
     except Exception as e:
         return "", str(e)
 

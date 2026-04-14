@@ -15,12 +15,10 @@ def test_chirp_to_btech_basic():
 
 def test_chirp_to_btech_truncation():
     # Create 35 rows of data
-    rows = [BTECH_HEADER.split(',')[0]] # Just the first column name as a placeholder for the header logic
-    # Actually, let's just use a simpler approach for the header in truncation test
-    header = "Name,Frequency,Duplex,Offset,Tone,rToneFreq,cToneF,DtcsCode,DtcsPolarity,RxDtcsCode,CrossMode,Mode,TStep,Skip,Power,Comment,URCALL,RPT1CALL,RPT2CALL,DVCODE"
+    header = "Name,Frequency,Duplex,Offset,Tone,rToneFreq,c%s,DtcsCode,DtcsPolarity,RxDtcsCode,CrossMode,Mode,TStep,Skip,Power,Comment,URCALL,RPT1CALL,RPT2CALL,DVCODE".replace('%s', 'cToneF')
     rows = [header]
     for i in range(35):
-        rows.append(f"{i},Name{i},146.0,+,0.0,Tone,100.0,100.0,023,NN,02mask,Tone->Tone,FM,5.0,,4.0W,,,,")
+        rows.append(f"Name{i},146.0,-,0.0,Tone,131.8,8MA,023,NN,0s,Tone->Tone,FM,5.0,,4.0W,,,,")
     csv_content = "\n".join(rows)
     output, warning = chirp_to_btech(csv_content)
     assert warning is not None

@@ -62,6 +62,7 @@ You can run the application using Docker and Docker Compose. This setup includes
 
 2.  **Build and run the containers:**
     ```bash
+    # If you encounter issues with stale containers, run: docker-compose down
     # If you are not in the docker group, you may need to use sudo
     sudo docker-compose up --build -d
     ```
