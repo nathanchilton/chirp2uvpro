@@ -1,15 +1,24 @@
 # TODO
 
-## [x] Investigate E2E 500 error discrepancy
-- [x] 1.1 Inspect `src/app/templates/partials/converter_ui.html` for HTHTMX request details
-- [x] 1.2 Inspect `src/app/static/js/main.js` for client-side logic interference
-- [x] 1.3 Implement Playwright network interception to verify E2E test payload (headers and/or body)
-- [x] 1.4 Run E2E tests with enhanced logging to capture 500 error traceback
+## [x] Fix "Conversion produced no content" error for >30 channels
+- [x] 4.1 Implement graceful truncation (df.head(30)) in `src/converter/logic.py`
+- [x] 4.2 Update `tests/unit/test_converter.py` with working truncation test
+- [x] 4.3 Verify fix with custom verification scripts
+- [x] 4.4 Commit changes
 
-## [x] Fix identified issue
-- [x] 2.1 Fix identified issue in API or UI
+## [ ] Refactor converter logic to parser/generator architecture
+- [ ] 1.1 Implement BaseParser and BaseGenerator classes
+- [ ] 1.2 Implement ChirpParser and ChirpGenerator
+- [ ] 1.3 Implement BtechParser and BtechGenerator
+- [x] 1.4 Implement ClipboardParser (JSON/CSV)
+- [ ] 1.5 Refactor `src/converter/logic.py` to use new architecture with backward compatibility
 
-## [x] Verification
-- [x] 3.1 Verify fix with reproduction scripts
-- [x] 3.2 Run E2E tests to confirm fix
-- [x] 3.3 Commit changes
+## [ ] Implement CLI tool
+- [ ] 2.1 Set up argparse with subcommands for all conversion directions
+- [ ] 2.2 Implement stdin/stdout and file I/O support
+- [ ] 2.3 Implement error handling and status reporting to stderr
+
+## [ ] Testing and Verification
+- [ ] 3.1 Update unit tests in `tests/unit/test_converter.py`
+- [ ] 3.2 Create integration tests in `tests/cli/test_cli.py`
+- [ ] 3.3 Verify Web API compatibility and run all tests
