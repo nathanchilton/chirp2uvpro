@@ -44,11 +44,11 @@ class ClipboardParser:
 parser = ClipboardParser()
 
 print("--- Testing JSON with prefix ---")
-json_with_prefix = 'BWE/BTECH JSON{"chs":[{"n":"Test","f":"146.520","d":"0","t":"None","dt":"None","s":"0","m":"FM"}]}'
+json_with_prefix = 'BWE/BTECH JSON{"chs":[{"n":"Test","rf":"146.520","tf":"146.520","ts":0,"s":0,"m":"FM"}]}'
 print(f"Result: {parser.parse(json_with_prefix)}")
 
 print("\n--- Testing JSON without prefix ---")
-json_without_prefix = '{"chs":[{"n":"Test","f":"146.520","d":"0","t":"None","dt":"None","s":"0","m":"FM"}]}'
+json_without_prefix = '{"chs":[{"n":"Test","rf":"146.520","tf":"146.520","ts":0,"s":0,"m":"FM"}]}'
 print(f"Result: {parser.parse(json_without_prefix)}")
 
 print("\n--- Testing CSV with prefix ---")

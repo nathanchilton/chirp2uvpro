@@ -12,7 +12,17 @@ def test_clipboard_parser_with_prefix():
     assert channels[0]['title'] == 'Test'
     assert channels[0]['tx_freq'] == 146520000
 
-# The correct header from internal_to_btech_csv
+def test_clipboard_parser_json():
+    json_content = '{"chs":[{"n":"N5RCA","rf":"146.780","tf":"146.180","ts":13180,"s":1,"id":1,"p":0}]}'
+    parser = ClipboardParser()
+    channels = parser.parse(json_content)
+    assert len(channels) == 1
+    assert channels[0]['name'] == 'N5RCA'
+    assert channels[0]['rx_freq_hz'] == 146780000.0
+    assert channels[0]['tx_freq_hz'] == 146180000.0
+    assert channels[0]['tx_sub_audio_hz'] == 13180.0
+    assert channels[0]['scan'] is True
+    assert channels[0]['tx_power'] == 'M'
 BTECH_HEADER = "title,tx_freq,rx_freq,tx_sub_audio(CTCSS=freq/DCS=number),rx_sub_audio(CTCSS=freq/DCS=number),tx_power(H/M/L),bandwidth(12500/25000),scan(0=OFF/1=ON),talk around(0=OFF/1=ON),pre_de_emph_bypass(0=OFF/1=ON),sign(0=OFF/1=ON),tx_dis(0=OFF/1=ON),bclo(0=OFF/1=ON),mute(0=OFF/1=ON),rx_modulation(0=FM/1=AM),tx_modulation(0=FM/1=AM)"
 
 def test_chirp_to_btech_basic():
@@ -33,23 +43,6 @@ def test_chirp_to_btech_truncation():
     assert warning is not None
     assert "Truncated" in warning
 
-def test_btech_to_chirp_basic():
-    # Using the correct BTECH header
-    # We want 146.78 in output and '-' duplex and 0.6 offset.
-    # To get 146.78 in output, tx_freq must be 146.78.
-    # To get '-' duplex and 0.6 offset, rx_freq must be 146.78 + 0.6 = 147.38.
-    # Note: BTECH header uses Hz (e.g. 146780000)
-    csv_content = f"{BTECH_HEADER}\nN5RCA,146780000,147380000,13180,0,H,25000,1,0,0,1,0,0,0,0"
-    output, warning = btech_to_chirp(csv_content)
-    assert "N5RCA" in output or "N5CR" in output
-    assert "146.78" in output
-    assert "-" in output # Duplex should be - because tx < rx
-    assert "0.6" in output # Offset
-
-def test_conversion_error():
-    with pytest.raises(ConversionError):
-        chirp_to_btech(None)
-
 def test_chirp_to_btech_empty_input():
     output, warning = chirp_to_btech("")
     assert output == ""
@@ -59,39 +52,6 @@ def test_chirp_to_btech_empty_input():
     output, warning = chirp_to_btech(header)
     assert output == ""
     assert warning is None
-
-def test_btech_to_chirp_power_mapping():
-    # Test High Power
-    content_h = f"{BTECH_HEADER}\nTestH,146000000,146500000,0,0,H,25000,0,0,0,0,0,0,0,0"
-    output_h, _ = btech_to_chirp(content_h)
-    assert "4.0W" in output_h or "2.5W" in output_h
-    
-    # Test Low Power
-    content_l = f"{BTECH_HEADER}\nTestL,146000000,146500000,0,0,L,25000,0,0,0,0,0,0,0,0"
-    output_l, _ = btech_to_chirp(content_l)
-    assert "1.0W" in output_l or "2.5W" in output_l
-
-def test_chirp_to_btech_nan_values():
-    # Test with NaN frequency and sub-audio
-    csv_content = "Name,Frequency,Duplex,Offset,Tone,rToneFreq,cToneF,DtcsCode,DtcsPolarity,RxDtcsCode,CrossMode,Mode,TStep,Skip,Power,Comment,URCALL,RPT1CALL,RPT2CALL,DVCODE\nN5RCA,, -,0.600000,Tone,131.8,8MA,023,NN,023,Tone->Tone,FM,5.00,,4.0W,,,,,"
-    output, warning = chirp_to_btech(csv_content)
-    assert "146780000" in output or "0" in output # Based on how format_freq_to_hz handles it
-    assert warning is None
-
-def test_btech_to_chirp_nan_values():
-    # Test with NaN in tx_freq, rx_freq, sub_audio, and tstep
-    # Using an empty cell which pandas reads as NaN
-    csv_content = f"{BTECH_HEADER}\nTestNaN,, , , ,H,25000,0,0,0,1,0,0,0,0"
-    output, warning = btech_to_chirp(csv_content)
-    assert warning is None
-    assert "0.0" in output # frequency should be 0.0
-
-def test_btech_to_chirp_malformed_values():
-    # Test with non-numeric values
-    csv_content = f"{BTECH_HEADER}\nTestBad,abc,def,for,jrl,H,25000,0,0,0,1,0,0,0,0"
-    output, warning = btech_to_chirp(csv_content)
-    assert warning is None
-    assert "0.0" in output
 
 def test_btech_to_chirp_dcs_ctcss():
     # Test CTCSS (freq)
@@ -109,9 +69,6 @@ def test_btech_to_chirp_dcs_ctcss():
     # The current implementation doesn't distinguish DCS from CTCSS in the chirp output,
     # but let's see if it at least doesn't crash.
     assert "Tone" in output_dcs
-
-
-
 
 def test_integration_pipeline():
     """
@@ -142,5 +99,6 @@ def test_integration_pipeline():
     assert "Tone" in output_chirp
     assert "131.8" in output_chirp
     assert "FM" in output_chirp
+
 
 

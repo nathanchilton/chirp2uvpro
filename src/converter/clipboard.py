@@ -3,6 +3,7 @@ import pandas as pd
 import io
 from typing import List, Dict, Any
 from .base import BaseParser, BaseGenerator
+from .utils import format_freq_to_hz, format_sub_audio_to_hz, normalize_power
 
 class ClipboardParser(BaseParser):
     """
@@ -38,6 +39,16 @@ class ClipboardParser(BaseParser):
                 for ch in channels:
                     if 'n' in ch:
                         ch['name'] = ch.pop('n')
+                    if 'rf' in ch:
+                        ch['rx_freq_hz'] = format_freq_to_hz(ch.pop('rf'))
+                    if 'tf' in ch:
+                        ch['tx_freq_hz'] = format_freq_to_hz(ch.pop('tf'))
+                    if 'ts' in ch:
+                        ch['tx_sub_audio_hz'] = format_sub_audio_to_hz(ch.pop('ts'))
+                    if 's' in ch:
+                        ch['scan'] = str(ch.pop('s')) == '1'
+                    if 'p' in ch:
+                        ch['tx_power'] = normalize_power(ch.pop('p'))
                 return channels
             except (json.JSONDecodeError, ValueError):
                 pass

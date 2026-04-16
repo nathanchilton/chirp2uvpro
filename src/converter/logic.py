@@ -79,12 +79,12 @@ def btech_to_chirp(csv_content: str) -> tuple[str, str | None]:
         return "", str(e)
 
 def internal_to_clipboard(channels: list) -> tuple[str, str | None]:
-    """Wrapper for ChirpGenerator to maintain backward compatibility."""
+    """Wrapper for ClipboardGenerator to maintain backward compatibility."""
     if not channels:
         return "", None
 
     try:
-        generator = ChirpGenerator()
+        generator = ClipboardGenerator()
         return generator.generate(channels), None
     except Exception as e:
         return "", str(e)

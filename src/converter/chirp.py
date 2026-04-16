@@ -96,10 +96,10 @@ class ChirpGenerator(BaseGenerator):
             ch_row['Frequency'] = tx_f_hz / 1_000_000
             
             if tx_f_hz < rx_f_hz:
-                ch_row['Duplex'] = '-'
+                ch_row['Duplex'] = '+'
                 ch_row['Offset'] = (rx_f_hz - tx_f_hz) / 1_000_000
             elif tx_f_hz > rx_f_hz:
-                ch_row['Duplex'] = '+'
+                ch_row['Duplex'] = '-'
                 ch_row['Offset'] = (tx_f_hz - rx_f_hz) / 1_000_000
             else:
                 ch_row['Duplex'] = '-'
