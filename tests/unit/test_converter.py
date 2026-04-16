@@ -88,17 +88,17 @@ def test_btech_to_chirp_nan_values():
 
 def test_btech_to_chirp_malformed_values():
     # Test with non-numeric values
-    csv_content = f"{BTECH_HEADER}\nTestBad,abc,def,ghi,jkl,H,25000,0,0,0,1,0,0,0,0"
+    csv_content = f"{BTECH_HEADER}\nTestBad,abc,def,for,jrl,H,25000,0,0,0,1,0,0,0,0"
     output, warning = btech_to_chirp(csv_content)
     assert warning is None
     assert "0.0" in output
 
-    def test_btech_to_chirp_dcs_ctcss():
-        # Test CTCSS (freq)
-        content_ctcss = f"{BTECH_HEADER}\nTestCTCSS,146000000,146500000,13180000,0,H,25000,0,0,0,1,0,0,0,0"
-        output_ctcss, _ = btech_to_chirp(content_ctcss)
-        assert "Tone" in output_ctcss
-        assert "13.18" in output_ctcss
+def test_btech_to_chirp_dcs_ctcss():
+    # Test CTCSS (freq)
+    content_ctcss = f"{BTECH_HEADER}\nTestCTCSS,146000000,146500000,13180000,0,H,25000,0,0,0,1,0,0,0,0"
+    output_ctcss, _ = btech_to_chirp(content_ctcss)
+    assert "Tone" in output_ctcss
+    assert "13.18" in output_ctcss
 
     # Test DCS (number)
     content_dcs = f"{BTECH_HEADER}\nTestDCS,146000000,146500000,23,0,H,25000,0,0,0,1,0,0,0,0"
@@ -109,6 +109,8 @@ def test_btech_to_chirp_malformed_values():
     # The current implementation doesn't distinguish DCS from CTCSS in the chirp output,
     # but let's see if it at least doesn't crash.
     assert "Tone" in output_dcs
+
+
 
 
 def test_integration_pipeline():

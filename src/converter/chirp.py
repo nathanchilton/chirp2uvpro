@@ -58,8 +58,8 @@ class ChirpParser(BaseParser):
                 tone = str(row.get('Tone', ''))
                 if tone in ['Tone', 'CTCSS']:
                     r_tone = float(row.get('rToneFreq', 0))
-                    ch['tx_sub_audio_hz'] = format_sub_audio_to_hz(r_tone)
-                    ch['rx_sub_audio_hz'] = format_sub_audio_to_hz(r_tone)
+                    ch['tx_sub_audio_hz'] = format_freq_to_hz(r_tone)
+                    ch['rx_sub_audio_hz'] = format_freq_to_hz(r_tone)
                 else:
                     ch['tx_sub_audio_hz'] = 0.0
                     ch['rx_sub_audio_hz'] = 0.0
@@ -108,7 +108,7 @@ class ChirpGenerator(BaseGenerator):
             tx_sub = ch.get('tx_sub_audio_hz', 0)
             if tx_sub > 0:
                 ch_row['Tone'] = 'Tone'
-                ch_row['rToneFreq'] = tx_sub / 1000
+                ch_row['rToneFreq'] = tx_sub / 1_000_000
             else:
                 ch_row['Tone'] = 'None'
                 ch_row['rToneFreq'] = 0.0
