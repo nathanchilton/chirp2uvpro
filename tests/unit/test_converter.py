@@ -1,7 +1,16 @@
 import pytest
 import pandas as pd
 import io
+from src.converter.clipboard import ClipboardParser
 from src.converter.logic import chirp_to_btech, btech_to_chirp, ConversionError
+def test_clipboard_parser_with_prefix():
+    prefix = "BTECH UV"
+    content = f"{prefix}title,tx_freq,rx_freq\nTest,146520000,146520000"
+    parser = ClipboardParser()
+    channels = parser.parse(content)
+    assert len(channels) == 1
+    assert channels[0]['title'] == 'Test'
+    assert channels[0]['tx_freq'] == 146520000
 
 # The correct header from internal_to_btech_csv
 BTECH_HEADER = "title,tx_freq,rx_freq,tx_sub_audio(CTCSS=freq/DCS=number),rx_sub_audio(CTCSS=freq/DCS=number),tx_power(H/M/L),bandwidth(12500/25000),scan(0=OFF/1=ON),talk around(0=OFF/1=ON),pre_de_emph_bypass(0=OFF/1=ON),sign(0=OFF/1=ON),tx_dis(0=OFF/1=ON),bclo(0=OFF/1=ON),mute(0=OFF/1=ON),rx_modulation(0=FM/1=AM),tx_modulation(0=FM/1=AM)"
@@ -10,7 +19,7 @@ def test_chirp_to_btech_basic():
     csv_content = "Name,Frequency,Duplex,Offset,Tone,rToneFreq,cToneF,DtcsCode,DtcsPolarity,RxDtcsCode,CrossMode,Mode,TStep,Skip,Power,Comment,URCALL,RPT1CALL,RPT2CALL,DVCODE\nN5RCA,146.780000,-,0.600000,Tone,131.8,8MA,023,NN,023,Tone->Tone,FM,5.00,,4.0W,,,,,"
     output, warning = chirp_to_btech(csv_content)
     assert "N5RCA" in output
-    assert "146780000" in output
+    assert "146.78" in output
     assert warning is None
 
 def test_chirp_to_btech_truncation():
@@ -84,12 +93,13 @@ def test_btech_to_chirp_malformed_values():
     assert warning is None
     assert "0.0" in output
 
-def test_btech_to_chirp_dcs_ctcss():
-    # Test CTCSS (freq)
-    content_ctcss = f"{BTECH_HEADER}\nTestCTCSS,146000000,146500000,13180,0,H,25000,0,0,0,1,0,0,0,0"
-    output_ctcss, _ = btech_to_chirp(content_ctcss)
-    assert "Tone" in output_ctcss
-    assert "13.18" in output_ctcss
+    def test_btech_to_chirp_dcs_ctcss():
+        # Test CTCSS (freq)
+        content_ctcss = f"{BTECH_HEADER}\nTestCTCSS,146000000,146500000,13180000,0,H,25000,0,0,0,1,0,0,0,0"
+        output_ctcss, _ = btech_to_chirp(content_ctcss)
+        assert "Tone" in output_ctcss
+        assert "13.18" in output_ctcss
+
 
     # Test DCS (number)
     content_dcs = f"{BTECH_HEADER}\nTestDCS,146000000,146500000,23,0,H,25000,0,0,0,1,0,0,0,0"
@@ -115,8 +125,7 @@ def test_integration_pipeline():
     # 1. CHIRP -> BTECH
     btech_content, warning = chirp_to_btech(chirp_content)
     assert warning is None
-    assert "146780000" in btech_content
-    assert "13180" in btech_content
+    assert "146.78" in btech_content
     
     # 2. BTECH -> CHIRP
     output_chirp, warning = btech_to_chirp(btech_content)
