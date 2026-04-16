@@ -100,7 +100,6 @@ def test_btech_to_chirp_malformed_values():
         assert "Tone" in output_ctcss
         assert "13.18" in output_ctcss
 
-
     # Test DCS (number)
     content_dcs = f"{BTECH_HEADER}\nTestDCS,146000000,146500000,23,0,H,25000,0,0,0,1,0,0,0,0"
     output_dcs, _ = btech_to_chirp(content_dcs)
@@ -110,6 +109,7 @@ def test_btech_to_chirp_malformed_values():
     # The current implementation doesn't distinguish DCS from CTCSS in the chirp output,
     # but let's see if it at least doesn't crash.
     assert "Tone" in output_dcs
+
 
 def test_integration_pipeline():
     """
