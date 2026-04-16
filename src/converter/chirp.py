@@ -108,7 +108,7 @@ class ChirpGenerator(BaseGenerator):
             tx_sub = ch.get('tx_sub_audio_hz', 0)
             if tx_sub > 0:
                 ch_row['Tone'] = 'Tone'
-                ch_row['rToneFreq'] = tx_sub / 1_000_000
+                ch_row['rToneFreq'] = tx_sub / 1_000
             else:
                 ch_row['Tone'] = 'None'
                 ch_row['rToneFreq'] = 0.0

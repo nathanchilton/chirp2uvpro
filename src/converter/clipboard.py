@@ -14,34 +14,49 @@ class ClipboardParser(BaseParser):
         
         content = content.strip()
 
-        # Strip known prefixes first so JSON parsing can work
-        prefixes = ["BWE/BTECH JSON", "BWE/BTECH CSV", "B1TECH UV", "BTECH UV"]
-        for prefix in prefixes:
-            if content.startswith(prefix):
-                content = content[len(prefix):].lstrip()
+        # Try to find the start of JSON content
+        json_start = -1
+        for char in ['{', '[']:
+            idx = content.find(char)
+            if idx != -1:
+                if json_start == -1 or idx < json_start:
+                    json_start = idx
+
+        if json_start != -1:
+            try:
+                import json
+                json_content = content[json_start:]
+                data = json.loads(json_content)
+                
+                channels = []
+                if isinstance(data, list):
+                    channels = data
+                elif isinstance(data, dict):
+                    channels = data.get('chs', [])
+                
+                # Map abbreviated keys if they exist
+                for ch in channels:
+                    if 'n' in ch:
+                        ch['name'] = ch.pop('n')
+                return channels
+            except (json.JSONDecodeError, ValueError):
+                pass
+
+        # Try to find the start of CSV content
+        for header in ['title,', 'Name,']:
+            idx = content.find(header)
+            if idx != -1:
+                content = content[idx:]
                 break
-        
-        # Try JSON first
-        try:
-            data = json.loads(content)
-            if isinstance(data, list):
-                return data
-            elif isinstance(data, dict):
-                return [data]
-            else:
-                return []
-        except json.JSONDecodeError:
-            pass
-            
-        # Try CSV
+
         try:
             df = pd.read_csv(io.StringIO(content))
             if df.empty:
                 return []
             return df.to_dict(orient='records')
-        except Exception as e:
-            print(f"Error parsing clipboard content: {e}")
+        except Exception:
             return []
+
 
 class ClipboardGenerator(BaseGenerator):
     """
