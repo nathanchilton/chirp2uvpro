@@ -1,8 +1,9 @@
 import os
 import sqlite3
 import uuid
+import html
 from flask import Blueprint, request, jsonify, render_template
-from converter.logic import chirp_to_btech, btech_to_chirp, clipboard_to_internal_wrapper, internal_to_clipboard, ConversionError
+from converter.logic import chirp_to_btech, btech_to_chirp, clipboard_to_internal_wrapper, clipboard_to_btech, internal_to_clipboard, ConversionError
 from database import get_db_connection
 
 api_bp = Blueprint('api', __name__)
@@ -35,6 +36,7 @@ def upload_file():
         # Read content for conversion
         with open(file_path, 'r') as f:
             csv_content = f.read()
+        print(f"DEBUG: csv_content: {csv_content}")
         
         if direction == 'chirp_to_btech':
             output_csv, warning = chirp_to_btech(csv_content)
@@ -42,7 +44,9 @@ def upload_file():
             output_csv, warning = btech_to_chirp(csv_content)
         elif direction == 'clipboard_to_internal':
             internal_channels, warning = clipboard_to_internal_wrapper(csv_content)
-            output_csv = internal_to_clipboard(internal_channels)
+            output_csv, warning_internal = internal_to_clipboard(internal_channels)
+            if warning_internal:
+                warning = warning_internal
         else:
             return '<div class="alert alert-danger mb-0">Invalid direction</div>', 400
         
@@ -67,6 +71,10 @@ def upload_file():
         warning_html = f'<div class="alert alert-warning mt-2 mb-0">{warning}</div>' if warning else ""
         
         return f'''
+        <div class="mb-3">
+            <label class="form-label">Result:</label>
+            <textarea class="form-control" rows="15" readonly role="textbox">{html.escape(output_csv)}</textarea>
+        </div>
         <div class="alert alert-success mb-0">
             uploaded and converted successfully!
             <div class="mt-2">
@@ -108,13 +116,15 @@ def convert_paste():
             output_csv, warning = btech_to_chirp(csv_content)
         elif direction == 'clipboard_to_internal':
             internal_channels, warning = clipboard_to_internal_wrapper(csv_content)
-            output_csv = internal_to_clipboard(internal_channels)
+            output_csv, warning_internal = internal_to_clipboard(internal_channels)
+            if warning_internal:
+                warning = warning_internal
         else:
             return '<div class="alert alert-danger mb-0">Invalid direction</div>', 400
         
         if not output_csv:
             return '<div class="alert alert-info mb-0">Conversion produced no content</div>', 200
-
+        
         # For paste, we don't save a file in UPLOAD_FOLDER like upload_file does,
         # but we still want to record it in history.
         input_filename = "pasted_content"
@@ -135,6 +145,10 @@ def convert_paste():
         warning_html = f'<div class="alert alert-warning mt-2 mb-0">{warning}</div>' if warning else ""
         
         return f'''
+        <div class="mb-3">
+            <label class="form-label">Result:</label>
+            <textarea class="form-control" rows="15" readonly role="textbox">{html.escape(output_csv)}</textarea>
+        </div>
         <div class="alert alert-success mb-0">
             uploaded and converted successfully!
             <div class="mt-2">
@@ -143,7 +157,7 @@ def convert_paste():
         </div>
         {warning_html}
         ''', 200
-
+        
     except ConversionError as e:
         return f'<div class="alert alert-danger mb-0">Conversion Error: {str(e)}</div>', 400
     except Exception as e:

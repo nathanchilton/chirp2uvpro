@@ -29,16 +29,28 @@
 </div>
 
 <div class="tab-content" id="converterTabsContent">
-    <div class="tab-pane fade show active" id="paste" role="tabpanel" aria-labelledby="paste-tab">
-        <form id="paste-form" hx-post="/api/convert/paste" hx-target="#result" hx-swap="innerHTML">
-            <div class="mb-3">
-                <input type="hidden" name="direction" id="conversion-direction" value="chirp_to_btech">
-                <textarea class="form-control" name="csv_content" rows="10" placeholder="Paste your CSV content or Clipboard Sharing text here..."></textarea>
+<div class="tab-pane fade show active" id="paste" role="tabpanel" aria-labelledby="paste-tab">
+    <div class="row">
+        <div class="col-md-6">
+            <form id="paste-form" hx-post="/api/convert/paste" hx-target="#result" hx-swap="innerHTML">
+                <div class="mb-3">
+                    <input type="hidden" name="direction" id="conversion-direction" value="chirp_to_btech">
+                    <textarea class="form-control" name="csv_content" rows="15" placeholder="Paste your CSV content or Clipboard Sharing text here..."></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary w-100" id="convert-button">Convert</button>
+            </form>
+        </div>
+        <div class="col-md-6">
+            <div id="result">
+                <div class="mb-3">
+                    <label class="form-label">Result:</label>
+                    <textarea class="form-control" rows="15" readonly placeholder="Converted content will appear here..."></textarea>
+                </div>
+                <div id="result-message"></div>
             </div>
-            <button type="submit" class="btn btn-primary" id="convert-button">Convert</button>
-        </form>
-        <div id="result" class="mt-3"></div>
+        </div>
     </div>
+</div>
     <div class="tab-pane fade" id="upload" role="tabpanel" aria-labelledby="upload-tab">
         <div id="upload-content">
             <!-- This content will be replaced by hx-get="/converter-file-ui" -->

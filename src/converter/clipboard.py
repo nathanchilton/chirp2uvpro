@@ -15,7 +15,8 @@ class ClipboardParser(BaseParser):
         content = content.strip()
 
         # Strip known prefixes first so JSON parsing can work
-        for prefix in ["BWE/BTECH JSON", "B1TECH UV", "BTECH UV"]:
+        prefixes = ["BWE/BTECH JSON", "BWE/BTECH CSV", "B1TECH UV", "BTECH UV"]
+        for prefix in prefixes:
             if content.startswith(prefix):
                 content = content[len(prefix):].lstrip()
                 break
