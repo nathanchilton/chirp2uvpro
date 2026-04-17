@@ -3,7 +3,7 @@ import sqlite3
 import uuid
 import html
 from flask import Blueprint, request, jsonify, render_template
-from converter.logic import chirp_to_btech, btech_to_chirp, clipboard_to_internal_wrapper, clipboard_to_btech, internal_to_clipboard, ConversionError
+from converter.logic import convert_format, ConversionError
 from database import get_db_connection
 
 api_bp = Blueprint('api', __name__)
@@ -21,13 +21,11 @@ def upload_file():
         return '<div class="alert alert-danger mb-0">No file part</div>', 400
     file = request.files['file']
     if file.filename == '':
-        return '<div class' + '="alert alert-danger mb-0">No selected file</div>', 400
+        return '<div class="alert alert-danger mb-0">No selected file</div>', 400
     
     try:
-        # Determine direction based on filename or presence of specific string
-        # For simplicity, we'll assume if it contains 'btech', it's btech_to_chirp
-        # Otherwise, it's chirp_to_btech
-        direction = 'btech_to_chirp' if 'btech' in file.filename.lower() else 'chirp_to_btech'
+        input_format = request.form.get('input_format', 'auto')
+        output_format = request.form.get('output_format', 'btech')
         
         filename = str(uuid.uuid4()) + "_" + file.filename
         file_path = os.path.join(UPLOAD_FOLDER, filename)
@@ -37,18 +35,9 @@ def upload_file():
         with open(file_path, 'r') as f:
             csv_content = f.read()
         print(f"DEBUG: csv_content: {csv_content}")
+        print(f"DEBUG: upload_file - input_format: {input_format}, output_format: {output_format}")
         
-        if direction == 'chirp_to_btech':
-            output_csv, warning = chirp_to_btech(csv_content)
-        elif direction == 'btech_to_chirp':
-            output_csv, warning = btech_to_chirp(csv_content)
-        elif direction == 'clipboard_to_internal':
-            internal_channels, warning = clipboard_to_internal_wrapper(csv_content)
-            output_csv, warning_internal = internal_to_clipboard(internal_channels)
-            if warning_internal:
-                warning = warning_internal
-        else:
-            return '<div class="alert alert-danger mb-0">Invalid direction</div>', 400
+        output_csv, warning = convert_format(csv_content, input_format, output_format)
         
         if not output_csv:
             return '<div class="alert alert-info mb-0">Conversion produced no content</div>', 200
@@ -76,7 +65,7 @@ def upload_file():
             <textarea class="form-control" rows="15" readonly role="textbox">{html.escape(output_csv)}</textarea>
         </div>
         <div class="alert alert-success mb-0">
-            uploaded and converted successfully!
+            File uploaded and converted successfully!
             <div class="mt-2">
                 <a href="{download_url}" class="btn btn-sm btn-success" download="{output_filename}">Download Converted File</a>
             </div>
@@ -105,22 +94,12 @@ def convert_paste():
         if not content:
             print("DEBUG: convert_paste - No content provided")
             return '<div class="alert alert-danger mb-0">No content provided</div>', 400
+
+        input_format = data.get('input_format', 'auto')
+        output_format = data.get('output_format', 'btech')
+        print(f"DEBUG: convert_paste - input_format: {input_format}, output_format: {output_format}")
         
-        csv_content = content
-        direction = data.get('direction', 'chirp_to_btech')
-        print(f"DEBUG: convert_paste - direction: {direction}")
-        
-        if direction == 'chirp_to_btech':
-            output_csv, warning = chirp_to_btech(csv_content)
-        elif direction == 'btech_to_chirp':
-            output_csv, warning = btech_to_chirp(csv_content)
-        elif direction == 'clipboard_to_internal':
-            internal_channels, warning = clipboard_to_internal_wrapper(csv_content)
-            output_csv, warning_internal = internal_to_clipboard(internal_channels)
-            if warning_internal:
-                warning = warning_internal
-        else:
-            return '<div class="alert alert-danger mb-0">Invalid direction</div>', 400
+        output_csv, warning = convert_format(content, input_format, output_format)
         
         if not output_csv:
             return '<div class="alert alert-info mb-0">Conversion produced no content</div>', 200
@@ -143,14 +122,13 @@ def convert_paste():
         
         download_url = f"/downloads/{output_filename}"
         warning_html = f'<div class="alert alert-warning mt-2 mb-0">{warning}</div>' if warning else ""
-        
         return f'''
         <div class="mb-3">
             <label class="form-label">Result:</label>
             <textarea class="form-control" rows="15" readonly role="textbox">{html.escape(output_csv)}</textarea>
         </div>
         <div class="alert alert-success mb-0">
-            uploaded and converted successfully!
+            Content pasted and converted successfully!
             <div class="mt-2">
                 <a href="{download_url}" class="btn btn-sm btn-success" download="{output_filename}">Download Converted File</a>
             </div>
@@ -163,8 +141,8 @@ def convert_paste():
     except Exception as e:
         import traceback
         print(f"Error in convert_paste: {str(e)}")
-        tracemult = traceback.format_exc()
-        print(tracemult)
+        traceback_str = traceback.format_exc()
+        print(traceback_str)
         return f'<div class="alert alert-danger mb-0">Error: {str(e)}</div>', 500
 
 @api_bp.route('/history/fragment', methods=['GET'])

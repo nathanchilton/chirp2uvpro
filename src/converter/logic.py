@@ -8,7 +8,35 @@ from .parsers import (
     ClipboardGenerator
 )
 
+def detect_format(content: str) -> str:
+    if not content:
+        return 'auto'
+    
+    # Try Chirp (most specific)
+    try:
+        if ChirpParser().parse(content):
+            return 'chirp'
+    except:
+        pass
+
+    # Try Btech
+    try:
+        if BtechParser().parse(content):
+            return 'btech'
+    except:
+        pass
+
+    # Try Clipboard (most general)
+    try:
+        if ClipboardParser().parse(content):
+            return 'clipboard'
+    except:
+        pass
+
+    return 'auto'
+
 class ConversionError(Exception):
+
     pass
 
 def clipboard_to_internal_wrapper(text_content: str) -> tuple[list, str | None]:
@@ -88,3 +116,46 @@ def internal_to_clipboard(channels: list) -> tuple[str, str | None]:
         return generator.generate(channels), None
     except Exception as e:
         return "", str(e)
+
+def convert_format(content: str, input_format: str, output_format: str) -> tuple[str, str | None]:
+    """Unified conversion function that handles any supported format combination."""
+    if not content:
+        return "", None
+
+    if input_format == 'auto':
+        input_format = detect_format(content)
+    
+    if input_format == 'auto':
+        # If we still have 'auto', it means detection failed. 
+        # We can't proceed without knowing the format.
+        return "", None
+
+    try:
+        # 1. Parse to internal channels
+        channels = []
+        if input_format == 'chirp':
+            channels = ChirpParser().parse(content)
+        elif input_format == 'btech':
+            channels = BtechParser().parse(content)
+        elif input_format == 'clipboard':
+            channels = ClipboardParser().parse(content)
+        else:
+            raise ConversionError(f"Unsupported input format: {input_format}")
+
+        if not channels:
+            return "", None
+
+        # 2. Generate from channels
+        if output_format == 'chirp':
+            output_csv = ChirpGenerator().generate(channels)
+        elif output_format == 'btech':
+            output_csv = BtechGenerator().generate(channels)
+        elif output_format == 'clipboard':
+            output_csv = ClipboardGenerator().generate(channels)
+        else:
+            raise ConversionError(f"Unsupported output format: {output_format}")
+
+        return output_csv, None
+
+    except Exception as e:
+        raise ConversionError(str(e))

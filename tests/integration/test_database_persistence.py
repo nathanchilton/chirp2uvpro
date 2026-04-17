@@ -11,7 +11,7 @@ def test_database_persistence_file_upload(page: Page, clear_db):
     # 1. Prepare a dummy CSV file
     test_file_path = "tests/integration/test_upload.csv"
     with open(test_file_path, "w") as f:
-        f.write("column1,column2\nvalue1,value2")
+        f.write("column1,columnint\nvalue1,value2")
 
     try:
         # 2. Perform upload via Playwright
@@ -22,13 +22,12 @@ def test_database_persistence_file_upload(page: Page, clear_db):
         page.set_input_files('input[type="file"]', test_file_path)
         page.click('button[id="upload-button"]')
         # Wait for the upload to complete and result to be displayed
-        expect(page.locator("#upload-result")).to_contain_text("successfully")
-
-
+        expect(page.locator("#result")).to_contain_text("successfully")
+        
         # 3. Verify database entry
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
-        cursor.execute("SELECT count(*) FROM conversion_history WHERE input_filename LIKE '%test_upload.csv'")
+        cursor.execute("SELECT count(*) FROM conversion_history WHERE input_filename LIKE '%test_upload.csv%'")
         count = cursor.fetchone()[0]
         conn.close()
 
@@ -47,7 +46,7 @@ def test_database_persistence_text_paste(page: Page, clear_db):
     page.fill('textarea[name="csv_content"]', csv_content)
     page.click('button[id="convert-button"]')
     # Wait for the paste to complete and result to be displayed
-    expect(page.locator("#result")).to_contain_text("uploaded and converted successfully!", timeout=10000)
+    expect(page.locator("#result")).to_contain_text("converted successfully!", timeout=10000)
 
     # 2. Verify database entry
     conn = sqlite3.connect(DB_PATH)

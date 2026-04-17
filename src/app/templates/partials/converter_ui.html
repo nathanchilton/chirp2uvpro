@@ -1,59 +1,54 @@
 <div class="converter-title" id="converter-title">
-    {% if mode == 'chirp_to_btech' %}
-    Convert CHIRP to BTECH
-    {% else %}
-    Convert BTECH to CHIRP
-    {% endif %}
+    Converter
 </div>
 
 <div class="mb-3">
-    <div class="form-check form-check-inline">
-        <input class="form-check-input" type="radio" name="mode" id="mode-chirp-to-btech" value="chirp_to_btech" {% if mode == 'chirp_to_btech' %}checked{% endif %} onchange="document.getElementById('conversion-direction').value = 'chirp_to_btech'">
-        <label class="form-check-label" for="mode-chirp-to-btech">CHIRP to BTECH</label>
-    </div>
-    <div class="form-check form-check-inline">
-        <input class="form-check-input" type="radio" name="mode" id="mode-btech-to-chirp" value="btech_to_chirp" {% if mode == 'btech_to_chirp' %}checked{% endif %} onchange="document.getElementById('conversion-direction').value = 'btech_to_chirp'">
-        <label class="form-check-label" for="mode-btech-to-chirp">BTECH to CHIRP</label>
-    </div>
-    <div class="form-check form-check-inline">
-        <input class="form-check-input" type="radio" name="mode" id="mode-clipboard" value="clipboard" {% if mode == 'clipboard' %}checked{% endif %} onchange="document.getElementById('conversion-direction').value = 'clipboard'">
-        <label class="form-check-label" for="mode-clipboard">Clipboard Sharing</label>
+    <div class="row">
+        <div class="col-md-6">
+            <label class="form-label">Input Format</label>
+            <select class="form-select" name="input_format" id="input-format">
+                <option value="auto">Auto-detect</option>
+                <option value="chirp">CHIRP</option>
+                <option value="btech">BTECH</option>
+                <option value="clipboard">Clipboard Sharing</option>
+            </select>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Output Format</label>
+            <select class="form-select" name="output_format" id="output-format">
+                <option value="chirp">CHIRP</option>
+                <option value="btech">BTECH</option>
+                <option value="clipboard">Clipboard Sharing</option>
+            </select>
+        </div>
     </div>
 </div>
 
 <div class="mb-3">
-    <div class="nav nav-tabs" id="converterTabs" role="tablist">
-        <button class="nav-link active" id="paste-tab" data-bs-toggle="tab" data-bs-target="#paste" type="button" role="tab">Paste Content</button>
-        <button class="nav-link" id="upload-tab" data-bs-toggle="tab" data-bs-target="#upload" type="button" role="tab" hx-get="/converter-file-ui" hx-target="#upload-content">Upload File</button>
+    <div class="nav nav-chunks" id="converterTabs" role="tablist">
+        <div class="nav nav-tabs" id="converterTabsList" role="tablist">
+            <button class="nav-link active" id="upload-tab" data-bs-toggle="tab" data-bs-target="#upload" type="button" role="tab" hx-get="/converter-file-ui" hx-target="#upload-content" hx-include="#input-format, #output-format">Upload File</button>
+            <button class="nav-link" id="text-tab" data-bs-toggle="tab" data-bs-target="#text-input-area" type="button" role="tab">Text Input</button>
+        </div>
     </div>
 </div>
 
 <div class="tab-content" id="converterTabsContent">
-<div class="tab-pane fade show active" id="paste" role="tabpanel" aria-labelledby="paste-tab">
-    <div class="row">
-        <div class="col-md-6">
-            <form id="paste-form" hx-post="/api/convert/paste" hx-target="#result" hx-swap="innerHTML">
-                <div class="mb-3">
-                    <input type="hidden" name="direction" id="conversion-direction" value="chirp_to_btech">
-                    <textarea class="form-control" name="csv_content" rows="15" placeholder="Paste your CSV content or Clipboard Sharing text here..."></textarea>
-                </div>
-                <button type="submit" class="btn btn-primary w-100" id="convert-button">Convert</button>
-            </form>
-        </div>
-        <div class="col-md-6">
-            <div id="result">
-                <div class="mb-3">
-                    <label class="form-label">Result:</label>
-                    <textarea class="form-control" rows="15" readonly placeholder="Converted content will appear here..."></textarea>
-                </div>
-                <div id="result-message"></div>
-            </div>
-        </div>
-    </div>
-</div>
-    <div class="tab-pane fade" id="upload" role="tabpanel" aria-labelledby="upload-tab">
+    <div class="tab-pane fade show active" id="upload" role="tabpanel" aria-labelledby="upload-tab">
         <div id="upload-content">
             <!-- This content will be replaced by hx-get="/converter-file-ui" -->
         </div>
     </div>
+    <div class="tab-pane fade" id="text-input-area" role="tabpanel" aria-labelledby="text-tab">
+        <form id="text-form" hx-post="/api/convert/paste" hx-target="#result" hx-swap="innerHTML" hx-include="#input-format, #output-format">
+            <div class="mb-3">
+                <textarea class="form-control" name="csv_content" rows="15" placeholder="Paste your CSV content or Clipboard Sharing text here..."></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary w-100" id="convert-button">Convert</button>
+        </form>
+    </div>
+</div>
+
+<div id="result" class="mt-3">
+    <!-- Results from both upload and paste will appear here -->
 </div>
