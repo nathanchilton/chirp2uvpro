@@ -7,7 +7,8 @@ from .utils import (
     format_sub_audio_to_hz,
     format_power_to_btech,
     format_power_to_chirp,
-    normalize_power
+    normalize_power,
+    is_true
 )
 
 class ChirpParser(BaseParser):
@@ -16,12 +17,12 @@ class ChirpParser(BaseParser):
             return []
         
         # Strip known prefixes
-        prefixes = ["BWE/BTECH JSON", "BWE/BTECH CSV", "B1TECH UV", "BTECH UV"]
+        prefixes = ["BWE/BCR JSON", "BWE/BTECH CSV", "B1TECH UV", "BTECH UV"]
         for prefix in prefixes:
             if content.startswith(prefix):
                 content = content[len(prefix):].lstrip()
                 break
-
+        
         try:
             df = pd.read_csv(io.StringIO(content))
             print(f"DEBUG: Columns found: {df.columns.tolist()}")
@@ -51,7 +52,7 @@ class ChirpParser(BaseParser):
                 ch['rx_freq_hz'] = float(rx_f)
                 
                 try:
-                    ch['bandwidth_hz'] = int(float(row.get('TStep', 25.0) * 1000))
+                    ch['bandwidth_hz'] = int(float(row.get('TStep', 20.0) * 1000))
                 except:
                     ch['bandwidth_hz'] = 25000
                 
@@ -59,19 +60,28 @@ class ChirpParser(BaseParser):
                 if tone in ['Tone', 'CTCSS']:
                     r_tone = float(row.get('rToneFreq', 0))
                     ch['tx_sub_audio_hz'] = format_freq_to_hz(r_tone)
-                    ch['rx_sub_audio_hz'] = format_freq_to_hz(r_tone)
+                    
+                    # Check if there's a separate RX sub-audio frequency in the CSV
+                    rx_sub_val = row.get('cToneF')
+                    if pd.notna(rx_sub_val) and str(rx_sub_val).strip() != '':
+                        ch['rx_sub_audio_hz'] = format_freq_to_hz(rx_sub_val)
+                    else:
+                        ch['rx_sub_audio_hz'] = 0.0
                 else:
                     ch['tx_sub_audio_hz'] = 0.0
                     ch['rx_sub_audio_hz'] = 0.0
                 
                 ch['tx_power'] = normalize_power(str(row.get('Power', '')))
-                ch['scan'] = False
-                ch['talk_around'] = False
-                ch['pre_de_emph_bypass'] = False
-                ch['sign'] = False
-                ch['tx_dis'] = False
-                ch['bclo'] = False
-                ch['mute'] = False
+
+                # Handle flags
+                for flag in ['scan', 'talk_around', 'pre_de_emph_bypass', 'sign', 'tx_dis', 'bclo', 'mute']:
+                    col_name = None
+                    for variant in [flag, flag.replace('_', '').capitalize(), flag.replace('_', ' ').title().replace(' ', ''), 'PreDeEmphBypass']:
+                        if variant in df.columns:
+                            col_name = variant
+                            break
+                    ch[flag] = is_true(row[col_name]) if col_name and col_name in row and pd.notna(row[col_name]) else False
+
                 ch['rx_modulation'] = 'FM' if row.get('Mode', 'FM') == 'FM' else 'AM'
                 ch['tx_modulation'] = 'FM' if row.get('Mode', 'FM') == 'FM' else 'AM'
                 
@@ -122,7 +132,14 @@ class ChirpGenerator(BaseGenerator):
                 'DtcsPolarity': 'NN',
                 'RxDtcsCode': '023',
                 'CrossMode': 'Tone->Tone',
-                'Skip': '0',
+                'Skip': '0' if ch.get('skip', False) else '1',
+                'Scan': '1' if ch.get('scan', False) else '0',
+                'TalkAround': '1' if ch.get('talk_around', False) else '0',
+                'Mute': '1' if ch.get('mute', False) else '0',
+                'Sign': '1' if ch.get('sign', False) else '0',
+                'TxDis': '1' if ch.get('tx_dis', False) else '0',
+                'Bclo': '1' if ch.get('bclo', False) else '0',
+                'PreDeEmphBypass': '1' if ch.get('pre_de_emph_bypass', False) else '0',
                 'Comment': '',
                 'URCALL': '',
                 'RPT1CALL': '',
@@ -136,7 +153,7 @@ class ChirpGenerator(BaseGenerator):
             return ""
             
         output_df = pd.DataFrame(rows)
-        chirp_cols = ['Location', 'Name', 'Frequency', 'Duplex', 'Offset', 'Tone', 'rToneFreq', 'cToneF', 'DtcsCode', 'DtcsPolarity', 'RxDtcsCode', 'CrossMode', 'Mode', 'TStep', 'Skip', 'Power', 'Comment', 'URCALL', 'RPT1CALL', 'RPT2CALL', 'DVCODE']
+        chirp_cols = ['Location', 'Name', 'Frequency', 'Duplex', 'Offset', 'Tone', 'rToneFreq', 'cToneF', 'DtcsCode', 'DtcsPolarity', 'RxDtcsCode', 'CrossMode', 'Mode', 'TStep', 'skip', 'Power', 'Comment', 'URCALL', 'RPT1CALL', 'RPT2CALL', 'DVCODE', 'Scan', 'TalkAround', 'Mute', 'Sign', 'TxDis', 'Bclo', 'PreDeEmphBypass']
         
         for col in chirp_cols:
             if col not in output_df.columns:

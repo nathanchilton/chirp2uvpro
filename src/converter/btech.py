@@ -17,6 +17,12 @@ class BtechParser(BaseParser):
         if not content:
             return []
 
+        def is_true(val):
+            try:
+                return float(val) == 1.0
+            except (ValueError, TypeError):
+                return str(val).strip() == '1'
+
         # 1. Try to find the start of JSON content
         json_start = -1
         for char in ['{', '[']:
@@ -43,18 +49,18 @@ class BtechParser(BaseParser):
                 break
 
         try:
-            if content.startswith('{'):
+            if content.startswith('{') or content.startswith('['):
                 import json
                 data = json.loads(content)
                 channels = []
                 if isinstance(data, list):
                     # If it's a list of channels directly
                     for ch_data in data:
-                        channels.append(self._parse_channel_dict(ch_data))
+                        channels.append(self._parse_channel_append(ch_data))
                 elif isinstance(data, dict):
                     # If it's a dict with 'chs' key
                     for ch_data in data.get('chs', []):
-                        channels.append(self._parse_channel_dict(ch_data))
+                        channels.append(self._parse_channel_append(ch_data))
                 return channels
             
             df = pd.read_csv(io.StringIO(content))
@@ -78,7 +84,7 @@ class BtechParser(BaseParser):
                 'tx_power': find_col(['tx_power', 'power']),
                 'bandwidth': find_col(['bandwidth']),
                 'scan': find_col(['scan']),
-                'talk_around': find_col(['', 'talk_around', 'ta']),
+                'talk_around': find_col(['talk_around', 'ta']),
                 'pre_de_emph_bypass': find_col(['pre_de_emph_bypass', 'pre_emphasis']),
                 'sign': find_col(['sign']),
                 'tx_dis': find_col(['tx_dis', 'transmit_disable']),
@@ -101,21 +107,20 @@ class BtechParser(BaseParser):
                     ch['tx_freq_hz'] = float(tx_f)
                     ch['rx_freq_hz'] = float(rx_f)
                     
-                    ch['tx_sub_audio_hz'] = format_freq_to_hz(row[col_map['tx_sub_audio']]) if col_map['tx_sub_audio'] else 0
-                    ch['rx_sub_audio_hz'] = format_freq_to_hz(row[col_map['rx_sub_audio']]) if col_map['rx_sub_audio'] else 0
+                    ch['tx_sub_audio_hz'] = int(format_sub_audio_to_hz(row[col_map['tx_sub_audio']])) if col_map['tx_sub_audio'] and not pd.isna(row[col_map['tx_sub_audio']]) else 0
+                    ch['rx_sub_audio_hz'] = int(format_sub_audio_to_hz(row[col_map['rx_sub_audio']])) if col_map['rx_sub_audio'] and not pd.isna(row[col_map['rx_sub_audio']]) else 0
                     
                     ch['tx_power'] = normalize_power(str(row[col_map['tx_power']])) if col_map['tx_power'] and not pd.isna(row[col_map['tx_power']]) else 'M'
                     
                     ch['bandwidth_hz'] = int(float(row[col_map['bandwidth']])) if col_map['bandwidth'] and not pd.isna(row[col_map['bandwidth']]) else 25000
                     
-                    ch['scan'] = str(row[col_map['scan']]) == '1' if col_map['scan'] and not pd.isna(row[col_map['scan']]) else False
-                    ch['talk_around'] = str(row[col_map['talk_around']]) == '1' if col_map['talk_around'] and not pd.isna(row[col_map['talk_around']]) else False
-                    ch['pre_de_emph_bypass'] = str(row[col_map['pre_de_emph_bypass']]) == '1' if col_map['pre_de_emph_bypass'] and not pd.isna(row[col_map['pre_de_emph_bypass']]) else False
-                    ch['sign'] = str(row[col_map['sign']]) == '1' if col_map['sign'] and not pd.isna(row[col_map['sign']]) else False
-                    ch['tx_dis'] = str(row[col_map['tx_dis']]) == '1' if col_map['tx_dis'] and not pd.isna(row[col_map['tx_dis']]) else False
-                    ch['bclo']                = str(row[col_map['bclo']]) == '1' if col_map['bclo'] and not pd.isna(row[col_map['bclo']]) else False
-                    ch['mute'] = str(row[col_map['mute']]) == '1' if col_map['mute'] and not pd.isna(row[col_map['mute']]) else False
-                    
+                    for flag in ['scan', 'talk_around', 'pre_de_emph_bypass', 'sign', 'tx_dis', 'bclo', 'mute']:
+                        col = col_map.get(flag)
+                        if col and not pd.isna(row[col]):
+                            ch[flag] = is_true(row[col])
+                        else:
+                            ch[flag] = False
+
                     rx_mod = str(row[col_map['rx_mod']]) if col_map['rx_mod'] and not pd.isna(row[col_map['rx_mod']]) else 'FM'
                     ch['rx_modulation'] = 'AM' if rx_mod == '1' else 'FM'
                     
@@ -131,7 +136,7 @@ class BtechParser(BaseParser):
             print(f"Error parsing Btech CSV: {fmt_err(e)}")
             return []
 
-    def _parse_channel_dict(self, ch_data: Dict[str, Any]) -> Dict[str, Any]:
+    def _parse_channel_append(self, ch_data: Dict[str, Any]) -> Dict[str, Any]:
         ch = {}
         ch['name'] = ch_data.get('n', '')
         tx_f = format_freq_to_hz(ch_data.get('tf', ch_data.get('f', 0)))
@@ -140,19 +145,18 @@ class BtechParser(BaseParser):
             rx_f = tx_f
         ch['tx_freq_hz'] = float(tx_f)
         ch['rx_freq_hz'] = float(rx_f)
-        ch['tx_sub_audio_hz'] = format_freq_to_hz(ch_data.get('ts', ch_data.get('t', 0)))
-        ch['rx_sub_audio_hz'] = format_freq_to_hz(ch_data.get('dt', ch_data.get('dt', 0)))
+        ch['tx_sub_audio_hz'] = int(format_sub_audio_to_hz(ch_data.get('ts', ch_data.get('t', 0))))
+        ch['rx_sub_audio_hz'] = int(format_sub_audio_to_hz(ch_data.get('dt', 0)))
         
-        # Handle scan and power separately if possible, otherwise fallback to old 's' behavior
+        def is_true(val):
+            try:
+                return float(val) == 1.0
+            except (ValueError, TypeError):
+                return str(val).strip() == '1'
+
         scan_val = ch_data.get('s')
         if scan_val is not None:
-            ch['scan'] = str(scan_val) == '1'
-            # If 's' was used for power in old format, and it's not a simple 0/1, 
-            # we might need to handle it. But let's assume 's' is scan in new format.
-            # In old format, 's' was '0' or '1' too for scan? 
-            # Actually, in line 145 of old code: ch['tx_power'] = normalize_power(ch_data.get('s', 'M'))
-            # And in line 147: ch['scan'] = ch_data.get('s', '0') == '1'
-            # It was using 's' for both!
+            ch['scan'] = is_true(scan_val)
         else:
             ch['scan'] = False
             
@@ -168,6 +172,10 @@ class BtechParser(BaseParser):
         ch['rx_modulation'] = 'FM' if rx_mod == 'FM' else 'AM'
         ch['tx_modulation'] = 'FM' if rx_mod == 'FM' else 'AM'
         return ch
+
+    def _parse_channel_dict(self, ch_data: Dict[str, Any]) -> Dict[str, Any]:
+        return self._parse_channel_append(ch_data)
+
 
 def fmt_err(e):
     return str(e)
