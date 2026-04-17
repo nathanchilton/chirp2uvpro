@@ -1,6 +1,6 @@
-# CHIRP to BTECH CSV Converter
+# Radio Frequency Configuration Converter
 
-A web application built with Python, HTMX, and a modern CSS framework to convert CSV files exported from CHIRP format to the BTECH UV-Pro format and vice-versa.
+A web application and CLI tool built with Python, HTMX, and a modern CSS framework to convert CSV files between CHIRP, BTECH UV-Pro, and Clipboard formats.
 
 ## 🚀 Overview
 
@@ -8,13 +8,15 @@ This application provides a bi-directional conversion tool for GMRs/radio logs, 
 
 ## ✨ Features
 
-*   **Bi-directional Conversion:** Convert CSVs from CHIRP format to BTECH UV-Pro format, and vice-versa.
+*   **Flexible Conversion:** Convert between CHIRP, BTECH UV-Pro, and Clipboard formats.
+*   **Auto-detection:** Automatically detect the input format when "Auto-detect" is selected.
+*   **Bi-directional:** Support for both CHIRP $\leftrightarrow$ BTECH and CHIRP $\leftrightarrow$ Clipboard conversions.
 *   **File Handling:** Ability to upload/download CSV files.
 *   **Data Persistence:** Stores conversion history, input/output files, and conversion records in a SQLite database.
 *   **Channel Limiting:** Automatically handles the BTECH UV-Pro limit of 30 channels by truncating files with more than 30 entries and issuing a warning to the user.
 *   **Interactive Input:** Features a text area for copying/pasting CSV content.
 *   **User Interface:** Built with HTMX for dynamic interactivity and styled with a modern CSS framework.
-*   **Testing:** Includes a comprehensive suite of unit tests to ensure correct behavior and prevent regressions.
+*   **Testing:** Includes a comprehensive suite of unit tests to ensure correct and prevent regressions.
 *   **End-to-End Testing:** Includes Playwright tests for verifying the full user flow.
 
 ## 🛠️ Technology Stack
@@ -75,19 +77,68 @@ Once started, the application is accessible at `http://localhost:5000` on your l
 
 ## 📚 Usage
 
-1.  **Upload:** Upload a CHIRP or BTECH CSV file via the interface.
-2.  **Convert:** Select the desired direction (CHIRP $\leftrightarrow$ BTECH) and initiate the conversion.
-3.  **View Results:** Download the converted file containing the results.
-4.  **History:** Review the SQLite database for a record of past conversions.
+1.  **Upload/Paste:** Upload a CSV file or paste content into the "Text Input" tab.
+2.  **Configure Formats:** Select the input format (or Auto-detect) and the desired output format.
+3.  **Convert:** Initiate the conversion process.
+4.  **View Results:** Download the converted file or copy the result from the text area.
+5.  **History:** Review the SQLite database for a record of past conversions.
 
-For details on the required CSV formats, please refer to the official guide: [https://baofengtech.com/your-complete-channel-import-guide-for-gmrs-pro-uv-pro/](https://baofengtech/your-complete-channel-import-guide-for-gmrs-pro-uv-pro/)
+For details on the required CSV formats, please refer to the official guide: [https://baofengtech.com/your-complete-channel-import-guide-for-gmrs-pro-uv-pro/](https://baofengtech.com/your-complete-channel-import-guide-for-gmrs-pro-uv-pro/)
+
+## 💻 Command Line Interface (CLI)
+
+For automation and headless environments, use the built-in CLI tool.
+
+### Installation
+
+Ensure you have the project dependencies installed:
+
+```bash
+pip install -r requirements.txt
+```
+
+### Usage
+
+The CLI tool allows you to convert between formats directly from your terminal.
+
+```bash
+python src/cli/main.py convert --from <format> --to <format> [options]
+```
+
+#### Arguments:
+
+*   `--from <format>`: The source format (`chirp`, `btech`, or `clipboard`). **Required.**
+*   `--to <format>`: The target format (`chirp`, `btech`, or `clipboard`). **Required.**
+*   `--input <file>`: Path to the input file (defaults to `stdin`).
+*   `--output <file>`: Path to the output file (defaults to `stdout`).
+*   `--clipboard-format <format>`: (Only for clipboard output) The format for clipboard output (`json` or `csv`). Defaults to `json`.
+
+#### Examples:
+
+**Convert CHIRP to BTECH:**
+
+```bash
+python src/cli/main.py convert --from chirp --to btech --input input.csv --output output.csv
+```
+
+**Convert BTECH to Clipboard (JSON):**
+
+```bash
+python src/cli/main.py convert --from btech --to clipboard --input btech.csv --clipboard-format json
+```
+
+**Using stdin/stdout:**
+
+```bash
+cat input.csv | python src/cli/main.py convert --from chirp --to btech
+```
 
 ## 🧪 Running Tests
 
 ### Unit Tests
 Run the unit tests using pytest:
 ```bash
-source venv/binenter/activate
+source venv/bin/activate
 pytest tests/unit
 ```
 
