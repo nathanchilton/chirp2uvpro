@@ -71,8 +71,10 @@ def test_conversion_flow_paste_chirp_to_btech(page: Page):
     # 1. Navigate to the application
     page.goto(BASE_URL)
     
-    # 2. Verify initial state (CHIRP mode)
-    expect(page.locator(".converter-title")).to_contain_text("Convert CHIRP to BTECH")
+    # 2. Verify initial state (Auto-detect)
+    expect(page.locator("#input-format")).to_have_value("auto")
+    expect(page.locator("#output-format")).to_have_value("chirp")
+    expect(page.locator(".converter-title")).to_contain_text("Convert")
     
     # 3. Prepare sample CHIRP content
     chirp_content = "Channel,Name,Frequency,Duplex,Tone,Dtune,Skip,Mode\n1,Test,146.520,0,None,None,0,FM\n2,Test2,146.550,0,None,None,0,FM"
@@ -84,7 +86,7 @@ def test_conversion_flow_paste_chirp_to_btech(page: Page):
     page.click("#convert-button")
     # 6. Wait for the result to appear and verify it
     result_locator = page.locator("#result").first
-    expect(result_locator).to_contain_text("uploaded and converted successfully!", timeout=10000)
+    expect(result_locator).to_contain_text("Content pasted and converted successfully!", timeout=10000)
     
     # 7. Check if the success alert is present
     expect(page.locator(".alert-success")).to_be_visible()
@@ -92,7 +94,9 @@ def test_conversion_flow_paste_chirp_to_btech(page: Page):
     # 8. Verify the converted content (should be CHIRP format)
     # The converted content itself is NOT in the #result div,
     # but the #result div is updated with the success message.
-    expect(result_locator).to_contain_text("uploaded and converted successfully!")
+    expect(result_locator).to_contain_text("Content pasted and converted successfully!")
+
+
     
     # Check if the download link is present and has a correct filename
     download_link = page.locator('a[download^="pasted_"]')
@@ -110,7 +114,8 @@ def test_conversion_flow_paste_btech_to_chirp(page: Page):
     page.goto(BASE_URL)
     
     # 2. Switch to BTECH mode
-    page.click("input[value='btech_to_chirp']")
+    page.select_option("#input-format", "btech")
+    page.select_option("#output-format", "chirp")
     
     # 3. Prepare sample BTECH content
     btech_content = 'BTECH UV{"chs":[{"n":"Test","f":"146.520","d":"0","t":"None","dt":"None","s":"0","m":"FM"}]}'
@@ -120,18 +125,18 @@ def test_conversion_flow_paste_btech_to_chirp(page: Page):
     
     # 5. Click the Convert button
     page.click("#convert-button")
-    
     # 6. Wait for the result to appear and verify it
     result_locator = page.locator("#result").first
-    expect(result_locator).to_contain_text("uploaded and converted successfully!", timeout=10000)
+    expect(result_locator).to_contain_text("Content pasted and converted successfully!", timeout=10000)
     
     # 7. Check if the success alert is present
     expect(page.locator(".alert-success")).to_be_visible()
     
     # 8. Verify the converted content (should be CHIRP format)
     # The converted content itself is NOT in the #result div,
-    # but the #result div is updated with the success message.
-    expect(result_locator).to_contain_text("uploaded and converted successfully!")
+        # but the #result div is updated with the success message.
+    expect(result_locator).to_contain_text("Content pasted and converted successfully!")
+
     
     # Check if the download link is present and has a correct filename
     download_link = page.locator('a[download^="pasted_"]')
