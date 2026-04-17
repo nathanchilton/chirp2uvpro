@@ -141,12 +141,14 @@ class BtechParser(BaseParser):
         ch['name'] = ch_data.get('n', '')
         tx_f = format_freq_to_hz(ch_data.get('tf', ch_data.get('f', 0)))
         rx_f = format_freq_to_hz(ch_data.get('rf', ch_data.get('d', 0)))
-        if rx_f == 0:
-            rx_f = tx_f
         ch['tx_freq_hz'] = float(tx_f)
         ch['rx_freq_hz'] = float(rx_f)
         ch['tx_sub_audio_hz'] = int(format_sub_audio_to_hz(ch_data.get('ts', ch_data.get('t', 0))))
-        ch['rx_sub_audio_hz'] = int(format_sub_audio_to_hz(ch_data.get('dt', 0)))
+        if rx_f == 0:
+            ch['rx_freq_hz'] = ch['tx_freq_hz']
+            ch['rx_sub_audio_hz'] = ch['tx_sub_audio_hz']
+        else:
+            ch['rx_sub_audio_hz'] = int(format_sub_audio_to_hz(ch_data.get('dt', 0)))
         
         def is_true(val):
             try:
