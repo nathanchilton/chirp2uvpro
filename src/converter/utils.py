@@ -7,6 +7,17 @@ def is_true(val):
     except (ValueError, TypeError):
         return str(val).strip() == '1'
 
+def format_number_to_str(val):
+    """Converts a number to a string, removing .0 if it is an integer."""
+    try:
+        f = float(val)
+        if f.is_integer():
+            return f"{int(f)}"
+        else:
+            return f"{f}"
+    except (ValueError, TypeError):
+        return str(val)
+
 def format_freq_to_hz(freq_val):
     """Converts frequency to Hz. If value < 3000, assumes MHz. If < 3000000, assumes kHz. Otherwise assumes Hz."""
     try:

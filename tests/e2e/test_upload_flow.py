@@ -27,8 +27,8 @@ def test_conversion_flow_upload_chirps_to_btech(page: Page):
     page.click('button:has-text("Upload and Convert")')
 
     # 6. Wait for the result to appear and verify success
-    # The target is #upload-result
-    result_locator = page.locator("#upload-result")
+    # The target is #result
+    result_locator = page.locator("#result")
     expect(result_locator).to_contain_text("uploaded and converted successfully!", timeout=10000)
 
     # 7. Check if the success alert is present

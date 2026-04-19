@@ -9,6 +9,7 @@ from .utils import (
     format_sub_audio_to_mhz,
     format_power_to_btech,
     normalize_power,
+    format_number_to_str,
 )
 
 class BtechParser(BaseParser):
@@ -206,21 +207,19 @@ class BtechGenerator(BaseGenerator):
         if not channels:
             return ""
 
-        header = "title,tx_freq,rx_freq,offset,duplex,tx_sub_audio(CTCSS=freq/DCS=number),rx_sub_audio(CTCSS=freq/DCS=number),tx_power(H/M/L),bandwidth(12500/25000),scan(0=OFF/1=ON),talk_around(0=OFF/1=ON),pre_de_emph_bypass(0=OFF/1=ON),sign(0=OFF/1=ON),tx_dis(0=OFF/1=ON),bclo(0=OFF/1=ON),mute(0=OFF/1=ON),rx_modulation(0=FM/1=AM),tx_modulation(0=FM/1=AM)"
+        header = "title,tx_freq,rx_freq,tx_sub_audio(CTCSS=freq/DCS=number),rx_sub_audio(CTCSS=fmt/DCS=number),tx_power(H/M/L),bandwidth(12500/25000),scan(0=OFF/1=ON),talk around(0=OFF/1=ON),pre_de_emph_bypass(0=OFF/1=ON),sign(0=OFF/1=ON),tx_dis(0=OFF/1=ON),bclo(0=OFF/1=ON),mute(0=OFF/1=ON),rx_modulation(0=FM/1=AM),tx_modulation(0=FM/1=AM)"
         output = io.StringIO()
         output.write(header + "\n")
 
         for ch in channels[:30]:
             row = [
                 ch.get('name', ''),
-                str(format_freq_to_hz(ch.get('tx_freq_hz', 0))),
-                str(format_freq_to_hz(ch.get('rx_freq_hz', 0))),
-                str(ch.get('offset_hz', 0) / 1_000_000),
-                ch.get('duplex', 'none'),
-                str(format_sub_audio_to_hz(ch.get('tx_sub_audio_hz', 0))),
-                str(format_sub_audio_to_hz(ch.get('rx_sub_audio_hz', 0))),
+                format_number_to_str(format_freq_to_hz(ch.get('tx_freq_hz', 0))),
+                format_number_to_str(format_freq_to_hz(ch.get('rx_freq_hz', 0))),
+                format_number_to_str(format_sub_audio_to_hz(ch.get('tx_sub_audio_hz', 0))),
+                format_number_to_str(format_sub_audio_to_hz(ch.get('rx_sub_audio_hz', 0))),
                 format_power_to_btech(ch.get('tx_power', 'M')),
-                str(ch.get('bandwidth_hz', 25000)),
+                format_number_to_str(ch.get('bandwidth_hz', 25000)),
                 '1' if ch.get('scan', False) else '0',
                 '1' if ch.get('talk_around', False) else '0',
                 '1' if ch.get('pre_de_emph_bypass', False) else '0',
