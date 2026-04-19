@@ -14,7 +14,7 @@ def test_conversion_flow_upload_chirps_to_btech(page: Page):
 
     # 2. Switch to "Upload File" tab
     # In converter_ui.html, the "Upload File" tab has hx-get="/converter-file-ui"
-    page.click('button:has-text("Upload File")')
+    page.click('#upload-tab')
 
     # 3. Ensure we are in the file upload UI
     expect(page.locator(".converter-file-ui")).to_be_visible()
@@ -24,7 +24,7 @@ def test_conversion_flow_upload_chirps_to_btech(page: Page):
     page.set_input_files('input[type="file"]', TEST_FILE_PATH)
 
     # 5. Click the Upload and Convert button
-    page.click('button:has-text("Upload and Convert")')
+    page.click('#upload-button')
 
     # 6. Wait for the result to appear and verify success
     # The target is #result
