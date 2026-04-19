@@ -14,11 +14,11 @@ def format_freq_to_hz(freq_val):
             return 0
         f = float(freq_val)
         if f < 3000: # Assumes MHz
-            return int(round(f * 1_000_000))
+            return round(f * 1_000_000, 3)
         elif f < 3000000: # Assumes kHz
-            return int(round(f * 1000))
+            return round(f * 1000, 3)
         else: # Assumes Hz
-            return int(round(f))
+            return round(f, 3)
     except (ValueError, TypeError):
         return 0
 
@@ -28,12 +28,13 @@ def format_sub_audio_to_hz(sub_audio_val):
         if pd.isna(sub_audio_val):
             return 0
         v = float(sub_audio_val)
-        if v < 0.001: # Assumes MHz
-            return int(round(v * 1_000_000))
+        print(f"DEBUG: format_sub_audio_to_hz called with v={v}")
+        if v <= 0.001: # Assumes MHz
+            return round(v * 1_000_000, 3)
         elif v < 1: # Assumes kHz
-            return int(round(v * 1000))
+            return round(v * 1000, 3)
         else: # Assumes Hz
-            return int(round(v))
+            return round(v, 3)
     except (ValueError, TypeError):
         return 0
 

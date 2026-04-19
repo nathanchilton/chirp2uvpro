@@ -32,49 +32,53 @@ class ChirpParser(BaseParser):
             channels = []
             for _, row in df.iterrows():
                 ch = {}
-                ch['name'] = str(row.get('Name', ''))
+                ch['name'] = str(next((row[k] for k in ['Name', 'title', 'name'] if k in row and pd.notna(row[k])), ''))
                 
-                tx_f_val = row.get('Frequency', 0)
+                tx_f_val = next((row[k] for k in ['Frequency', 'tx_freq', 'tx'] if k in row and pd.notna(row[k])), 0)
                 tx_f = format_freq_to_hz(tx_f_val)
                 
-                duplex = str(row.get('Duplex', '-')).strip()
-                offset_val = row.get('Offset', 0)
-                offset_hz = format_freq_to_hz(offset_val)
-                
-                if duplex == '-':
-                    rx_f = tx_f - offset_hz
-                elif duplex == '+':
-                    rx_f = tx_f + offset_hz
+                rx_f_val = next((row[k] for k in ['rx_freq', 'rx_frequency', 'rx'] if k in row and pd.notna(row[k])), None)
+                if rx_f_val is not None:
+                    rx_f = format_freq_to_hz(rx_f_val)
                 else:
-                    rx_f = tx_f
-                
+                    duplex = str(row.get('Duplex', '-')).strip()
+                    offset_val = row.get('Offset', 0)
+                    offset_hz = format_freq_to_hz(offset_val)
+                    if duplex == '-':
+                        rx_f = tx_f - offset_hz
+                    elif duplex == '+':
+                        rx_f = tx_f + offset_hz
+                    else:
+                        rx_f = tx_f
                 ch['tx_freq_hz'] = float(tx_f)
                 ch['rx_freq_hz'] = float(rx_f)
+                ch['offset_hz'] = offset_hz if 'offset_hz' in locals() else 0.0
+                ch['duplex'] = duplex if 'duplex' in locals() else 'none'
                 
                 try:
-                    ch['bandwidth_hz'] = int(float(row.get('TStep', 20.0) * 1000))
+                    bw_val = next((row[k] for k in ['TStep', 'bandwidth', 'bandwidth_hz'] if k in row and pd.notna(row[k])), 20.0)
+                    ch['bandwidth_hz'] = int(float(bw_val) * 1000)
                 except:
                     ch['bandwidth_hz'] = 25000
                 
-                tone = str(row.get('Tone', ''))
-                if tone in ['Tone', 'CTCSS']:
-                    r_tone = float(row.get('rToneFreq', 0))
-                    ch['tx_sub_audio_hz'] = format_freq_to_hz(r_tone)
+                tone_val = next((row[k] for k in ['Tone', 'CTCSS', 'DCS', 'tx_sub_audio(CTCSS=freq/DCS=number)', 'rx_sub_audio(CTCSS=freq/DCS=number)'] if k in row and pd.notna(row[k])), '')
+                if str(tone_val).strip() != '':
+                    r_tone = next((row[k] for k in ['rToneFreq', 'ctonef', 'ctcss', 'tx_sub_audio(CTCSS=freq/DCS=number)'] if k in row and pd.notna(row[k])), 0)
+                    ch['tx_sub_audio_hz'] = format_sub_audio_to_hz(r_tone) if r_tone else 0.0
                     
-                    # Check if there's a separate RX sub-audio frequency in the CSV
-                    rx_sub_val = row.get('cToneF')
-                    if pd.notna(rx_sub_val) and str(rx_sub_val).strip() != '':
-                        ch['rx_sub_audio_hz'] = format_freq_to_hz(rx_sub_val)
+                    rx_sub_val = next((row[k] for k in ['cToneF', 'rx_sub_audio', 'ctcss', 'rx_sub_audio(CTCSS=freq/DCS=number)'] if k in row and pd.notna(row[k])), None)
+                    if rx_sub_val is not None and str(rx_sub_val).strip() != '':
+                        ch['rx_sub_audio_hz'] = format_sub_audio_to_hz(rx_sub_val)
                     else:
                         ch['rx_sub_audio_hz'] = 0.0
                 else:
                     ch['tx_sub_audio_hz'] = 0.0
                     ch['rx_sub_audio_hz'] = 0.0
                 
-                ch['tx_power'] = normalize_power(str(row.get('Power', '')))
-
+                ch['tx_power'] = normalize_power(str(next((row[k] for k in ['Power', 'tx_power'] if k in row and pd.notna(row[k])), 'M')))
+                
                 # Handle flags
-                for flag in ['scan', 'talk_around', 'pre_de_emph_bypass', 'sign', 'tx_dis', 'bclo', 'mute']:
+                for flag in ['scan', 'talk_around', 'pre_de_anch_bypass', 'sign', 'tx_dis', 'bclo', 'mute']:
                     col_name = None
                     for variant in [flag, flag.replace('_', '').capitalize(), flag.replace('_', ' ').title().replace(' ', ''), 'PreDeEmphBypass']:
                         if variant in df.columns:
@@ -82,10 +86,11 @@ class ChirpParser(BaseParser):
                             break
                     ch[flag] = is_true(row[col_name]) if col_name and col_name in row and pd.notna(row[col_name]) else False
 
-                ch['rx_modulation'] = 'FM' if row.get('Mode', 'FM') == 'FM' else 'AM'
-                ch['tx_modulation'] = 'FM' if row.get('Mode', 'FM') == 'FM' else 'AM'
+                ch['rx_modulation'] = 'FM' if next((row[k] for k in ['Mode', 'rx_modulation', 'rx_mode'] if k in row and pd.notna(row[k])), 'FM') == 'FM' else 'AM'
+                ch['tx_modulation'] = 'FM' if next((row[k] for k in ['Mode', 'tx_modulation', 'tx_mode'] if k in row and pd.notna(row[k])), 'FM') == 'FM' else 'AM'
                 
                 channels.append(ch)
+
             return channels
         except Exception as e:
             print(f"Error parsing Chirp CSV: {e}")
@@ -118,10 +123,16 @@ class ChirpGenerator(BaseGenerator):
             tx_sub = ch.get('tx_sub_audio_hz', 0)
             if tx_sub > 0:
                 ch_row['Tone'] = 'Tone'
-                ch_row['rToneFreq'] = tx_sub / 1_000_000
+                ch_row['rToneFreq'] = tx_sub / 1_000_000 if tx_sub >= 1_000_000 else tx_sub
             else:
                 ch_row['Tone'] = 'None'
                 ch_row['rToneFreq'] = 0.0
+
+            rx_sub = ch.get('rx_sub_audio_hz', 0)
+            if rx_sub > 0:
+                ch_row['cToneF'] = rx_sub / 1_000_000 if rx_sub >= 1_000_000 else rx_sub
+            else:
+                ch_row['cToneF'] = 0.0
                 
             ch_row['Mode'] = 'FM' if ch.get('rx_modulation', 'FM') == 'FM' else 'NFM'
             ch_row['TStep'] = ch.get('bandwidth_hz', 25000) / 1000
@@ -148,6 +159,7 @@ class ChirpGenerator(BaseGenerator):
             })
             
             rows.append(ch_row)
+
             
         if not rows:
             return ""
