@@ -1,2 +1,2 @@
-./ralph-loop.sh "Fix the failing tests.  Check the test logic first, to confirm that it is consistent with the expectations in README.md.  If the test logic is incorrect, correct the test.  Otherwise, fix the application code until all the tests pass.  Use python from the venv to run pytest."
+scripts/ralph-loop.sh "Fix the failing tests.  Check the test logic first, to confirm that it is consistent with the expectations in README.md.  If the test logic is incorrect, correct the test.  Otherwise, fix the application code until all the tests pass.  Use python from the venv to run pytest."
 
