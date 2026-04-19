@@ -63,7 +63,7 @@ def test_api_upload_success():
     """
     Test POST /api/convert/upload with a valid CSV file
     """
-    with open("test_upload.csv", "rb") as f:
+    with open("tests/data/test_upload.csv", "rb") as f:
         files = {"file": ("test_upload.csv", f, "text/csv")}
         data = {'input_format': 'chirp', 'output_format': 'btech'}
         response = requests.post(f"{BASE_URL}/api/convert/upload", files=files, data=data)
