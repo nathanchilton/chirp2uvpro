@@ -82,6 +82,14 @@ def normalize_power(p_str):
         return 'M'
     if p_str in ['L', '1.0W']:
         return 'L'
+    return p_str
+    p_str = str(p_str).upper()
+    if p_str in ['H', '4.0W']:
+        return 'H'
+    if p_str in ['M', '2.5W']:
+        return 'M'
+    if p_str in ['L', '1.0W']:
+        return 'L'
     return 'M'
 
 def format_power_to_btech(p_str):

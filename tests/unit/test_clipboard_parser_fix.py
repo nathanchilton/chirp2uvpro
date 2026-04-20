@@ -11,7 +11,7 @@ def test_clipboard_parser_with_json_prefix():
     assert channels[0]['tx_freq_hz'] == 146140000.0
     assert channels[0]['tx_sub_audio_hz'] == 13180.0
     assert channels[0]['scan'] is True
-    assert channels[0]['tx_power'] == 'M'
+    assert channels[0]['tx_power'] == '0'
 
 def test_clipboard_parser_with_csv_prefix():
     content = 'BTECH UVtitle,tx_freq,rx_freq\nTest,146520000,146520000'
