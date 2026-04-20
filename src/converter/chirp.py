@@ -61,19 +61,13 @@ class ChirpParser(BaseParser):
                 except:
                     ch['bandwidth_hz'] = 25000
                 
-                tone_val = next((row[k] for k in ['Tone', 'CTCSS', 'DCS', 'tx_sub_audio(CTCSS=freq/DCS=number)', 'rx_sub_audio(CTCSS=freq/DCS=number)'] if k in row and pd.notna(row[k])), '')
-                if str(tone_val).strip() != '':
-                    r_tone = next((row[k] for k in ['rToneFreq', 'ctonef', 'ctcss', 'tx_sub_audio(CTCSS=freq/DCS=number)'] if k in row and pd.notna(row[k])), 0)
-                    ch['tx_sub_audio_hz'] = format_sub_audio_to_hz(r_tone) if r_tone else 0.0
-                    
-                    rx_sub_val = next((row[k] for k in ['cToneF', 'rx_sub_audio', 'ctcss', 'rx_sub_audio(CTCSS=freq/DCS=number)'] if k in row and pd.notna(row[k])), None)
-                    if rx_sub_val is not None and str(rx_sub_val).strip() != '':
-                        ch['rx_sub_audio_hz'] = format_sub_audio_to_hz(rx_sub_val)
-                    else:
-                        ch['rx_sub_audio_hz'] = 0.0
-                else:
-                    ch['tx_sub_audio_hz'] = 0.0
-                    ch['rx_sub_audio_hz'] = 0.0
+                # Parse TX sub-audio frequency independently
+                r_tone = next((row[k] for k in ['rToneFreq', 'ctonef', 'ctcss', 'tx_sub_audio(CTCSS=freq/DCS=number)'] if k in row and pd.notna(row[k])), 0)
+                ch['tx_sub_audio_hz'] = format_sub_audio_to_hz(r_tone) if r_tone else 0.0
+
+                # Parse RX sub-audio frequency independently
+                rx_sub_val = next((row[k] for k in ['cToneF', 'rx_sub_audio', 'ctcss', 'rx_sub_audio(CTCSS=freq/DCS=number)'] if k in row and pd.notna(row[k])), 0)
+                ch['rx_sub_audio_hz'] = format_sub_audio_to_hz(rx_sub_val) if rx_sub_val else 0.0
                 
                 ch['tx_power'] = normalize_power(str(next((row[k] for k in ['Power', 'tx_power'] if k in row and pd.notna(row[k])), 'M')))
                 
