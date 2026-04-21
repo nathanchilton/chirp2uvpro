@@ -7,8 +7,6 @@ class TestLosslessRoundTrip(unittest.TestCase):
     def setUp(self):
         self.btech_parser = BtechParser()
         self.btech_generator = BtechGenerator()
-        self.chirp_parser = ChirpParser() if hasattr(self, 'ChirpParser') else ChirpParser() 
-        # Wait, I'll just use the correct ones
         self.chirp_parser = ChirpParser()
         self.chirp_generator = ChirpGenerator()
 
@@ -31,7 +29,7 @@ class TestLosslessRoundTrip(unittest.TestCase):
                 'tx_dis': False,
                 'bclo': False,
                 'mute': False,
-                'rx_modulation': 'FM',
+                'rx_modulation': 'AM',
                 'tx_modulation': 'FM',
                 'skip': False
             }

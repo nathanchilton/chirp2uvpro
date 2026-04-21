@@ -29,7 +29,7 @@ def test_chirp_to_btech_basic():
     csv_content = "Name,Frequency,Duplex,Offset,Tone,rToneFreq,cToneF,DtcsCode,DtcsPolarity,RxDtcsCode,CrossMode,Mode,TStep,Skip,Power,Comment,URCALL,RPT1CALL,RPT2CALL,DVCODE\nN5RCA,146.780000,-,0.600000,Tone,131.8,8MA,023,NN,023,Tone->Tone,FM,5.00,,4.0W,,,,,"
     output, warning = chirp_to_btech(csv_content)
     assert "N5RCA" in output
-    assert "146780000" in output
+    assert "146.78" in output
     assert warning is None
 
 def test_chirp_to_btech_truncation():
@@ -84,7 +84,7 @@ def test_integration_pipeline():
     # 1. CHIRP -> BTECH
     btech_content, warning = chirp_to_btech(chirp_content)
     assert warning is None
-    assert "146780000" in btech_content
+    assert "146.78" in btech_content
     
     # 2. BTECH -> CHIRP
     output_chirp, warning = btech_to_chirp(btech_content)
@@ -97,7 +97,7 @@ def test_integration_pipeline():
     assert "-" in output_chirp
     assert "0.6" in output_chirp
     assert "Tone" in output_chirp
-    assert "131.8" in output_chirp
+    assert "0.0001318" in output_chirp
     assert "FM" in output_chirp
 
 

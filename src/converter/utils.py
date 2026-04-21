@@ -34,13 +34,19 @@ def format_freq_to_hz(freq_val):
         return 0
 
 def format_sub_audio_to_hz(sub_audio_val):
-    """Converts sub-audio frequency to Hz. Assumes the input is in Hz."""
+    """Converts sub-audio frequency to Hz. Assumes MHz if < 0.01, kHz if < 3.0, else Hz."""
     try:
         if pd.isna(sub_audio_val):
-            return 0
-        return float(sub_audio_val)
+            return 0.0
+        f = float(sub_audio_val)
+        if f < 0.01: # Assumes MHz (e.g. 0.0001318 MHz -> 131.8 Hz)
+            return f * 1_000_000
+        elif f < 3.0: # Assumes kHz (e.g. 0.1318 kHz -> 131.8 Hz)
+            return f * 1000
+        else: # Assumes Hz (e.g. 131.8 Hz -> 131.8 Hz)
+            return f
     except (ValueError, TypeError):
-        return 0
+        return 0.0
 
 def format_freq_to_mhz(freq_val):
     """Converts frequency to MHz."""
@@ -76,14 +82,6 @@ def normalize_power(p_str):
     if p_str in ['L', '1.0W']:
         return 'L'
     return p_str
-    p_str = str(p_str).upper()
-    if p_str in ['H', '4.0W']:
-        return 'H'
-    if p_str in ['M', '2.5W']:
-        return 'M'
-    if p_str in ['L', '1.0W']:
-        return 'L'
-    return 'M'
 
 def format_power_to_btech(p_str):
     """Converts power string (H, M, L, 4.0W, etc.) to Btech format (H, M, L)."""

@@ -86,7 +86,8 @@ class BtechParser(BaseParser):
                 'tx_sub_audio': find_col(['tx_sub_audio', 'ctcss', 'dcs', 'rToneFreq']),
                 'rx_sub_audio': find_col(['rx_sub_audio', 'ctcss', 'dcs', 'cToneF', 'cToneFreq']),
                 'tx_power': find_col(['tx_power', 'power']),
-                'bandwidth': find_col(['bandwidth']),
+                'bandwidth': find_col(['bandwidth', 'TStep']),
+
                 'scan': find_col(['scan']),
                 'talk_around': find_col(['talk_around', 'ta']),
                 'pre_de_emph_bypass': find_col(['pre_de_emph_bypass', 'pre_emphasis']),
@@ -94,10 +95,10 @@ class BtechParser(BaseParser):
                 'tx_dis': find_col(['tx_dis', 'transmit_disable']),
                 'bclo': find_col(['bclo']),
                 'mute': find_col(['mute']),
-                'rx_mod': find_col(['rx_modulation', 'rx_mode']),
-                'tx_mod': find_col(['tx_modulation', 'tx_mode']),
-                'offset': find_col(['offset']),
-                'duplex': find_col(['duplex']),
+                'rx_mod': find_col(['rx_modulation', 'rx_mode', 'Mode']),
+                'tx_mod': find_col(['tx_modulation', 'tx_mode', 'Mode']),
+                'offset': find_col(['offset', 'Offset']),
+                'duplex': find_col(['duplex', 'Duplex']),
             }
 
             channels = []
@@ -147,10 +148,10 @@ class BtechParser(BaseParser):
                             ch[flag] = False
 
                     rx_mod = str(row[col_map['rx_mod']]) if col_map['rx_mod'] and not pd.isna(row[col_map['rx_mod']]) else 'FM'
-                    ch['rx_modulation'] = 'AM' if rx_mod == '1' else 'FM'
+                    ch['rx_modulation'] = 'AM' if rx_mod == 'AM' or rx_mod == '1' else 'FM'
                     
                     tx_mod = str(row[col_map['tx_mod']]) if col_map['tx_mod'] and not pd.isna(row[col_map['tx_mod']]) else 'FM'
-                    ch['tx_modulation'] = 'AM' if tx_mod == '1' else 'FM'
+                    ch['tx_modulation'] = 'AM' if tx_mod == 'AM' or tx_mod == '1' else 'FM'
 
                     channels.append(ch)
                 except Exception as e:
@@ -212,17 +213,19 @@ class BtechGenerator(BaseGenerator):
         if not channels:
             return ""
 
-        header = "title,tx_freq,rx_freq,tx_sub_audio(CTCSS=freq/DCS=number),rx_sub_audio(CTCSS=freq/DCS=number),tx_power(H/M/L),bandwidth(12500/25000),scan(0=OFF/1=ON),talk around(0=OFF/1=ON),pre_de_emph_bypass(0=OFF/1=ON),sign(0=OFF/1=ON),tx_dis(0=OFF/1=ON),bclo(0=OFF/1=ON),mute(0=OFF/1=ON),rx_modulation(0=FM/1=AM),tx_modulation(0=FM/1=AM),location,skip"
+        header = "title,tx_freq,rx_freq,duplex,offset,tx_sub_audio,rx_sub_audio,tx_power,bandwidth,scan,talk_around,pre_de_emph_bypass,sign,tx_dis,bclo,mute,rx_modulation,tx_modulation,location,skip"
         output = io.StringIO()
         output.write(header + "\n")
 
-        for ch in channels[:30]:
+        for ch in channels:
             row = [
                 ch.get('name', ''),
-                format_number_to_str(format_freq_to_hz(ch.get('tx_freq_hz', 0))),
-                format_number_to_str(format_freq_to_hz(ch.get('rx_freq_hz', 0))),
-                format_number_to_str(format_sub_audio_to_hz(ch.get('tx_sub_audio_hz', 0))),
-                format_number_to_str(format_sub_audio_to_hz(ch.get('rx_sub_audio_hz', 0))),
+                format_number_to_str(format_freq_to_mhz(ch.get('tx_freq_hz', 0))),
+                format_number_to_str(format_freq_to_mhz(ch.get('rx_freq_hz', 0))),
+                ch.get('duplex', 'none'),
+                format_number_to_str(format_freq_to_mhz(ch.get('offset_hz', 0))),
+                format_number_to_str(format_freq_to_mhz(ch.get('tx_sub_audio_hz', 0))),
+                format_number_to_str(format_freq_to_mhz(ch.get('rx_sub_audio_hz', 0))),
                 format_power_to_btech(ch.get('tx_power', 'M')),
                 format_number_to_str(ch.get('bandwidth_hz', 25000)),
                 '1' if ch.get('scan', False) else '0',
@@ -232,12 +235,13 @@ class BtechGenerator(BaseGenerator):
                 '1' if ch.get('tx_dis', False) else '0',
                 '1' if ch.get('bclo', False) else '0',
                 '1' if ch.get('mute', False) else '0',
-                '0' if ch.get('rx_modulation', 'FM') == 'FM' else '1',
-                '0' if ch.get('tx_modulation', 'FM') == 'FM' else '1',
+                'FM' if ch.get('rx_modulation', 'FM') == 'FM' else 'AM',
+                'FM' if ch.get('tx_modulation', 'FM') == 'FM' else 'AM',
                 ch.get('location', ''),
                 '1' if ch.get('skip', False) else '0'
             ]
-            output.write(",".join(row) + "\n")
+            output.write(",".join(map(str, row)) + "\n")
 
         return output.getvalue().strip()
+
 
