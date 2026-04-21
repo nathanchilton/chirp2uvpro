@@ -135,7 +135,7 @@ class BtechParser(BaseParser):
                     ch['rx_freq_hz'] = float(rx_f)
                     ch['tx_sub_audio_hz'] = format_sub_audio_to_hz(row[col_map['tx_sub_audio']]) if col_map['tx_sub_audio'] and not pd.isna(row[col_map['tx_sub_audio']]) else 0
                     ch['rx_sub_audio_hz'] = format_sub_audio_to_hz(row[col_map['rx_sub_audio']]) if col_map['rx_sub_audio'] and not pd.isna(row[col_map['rx_sub_audio']]) else 0
-                    
+
                     ch['tx_power'] = normalize_power(str(row[col_map['tx_power']])) if col_map['tx_power'] and not pd.isna(row[col_map['tx_power']]) else 'M'
                     
                     ch['bandwidth_hz'] = int(float(row[col_map['bandwidth']])) if col_map['bandwidth'] and not pd.isna(row[col_map['bandwidth']]) else 25000
