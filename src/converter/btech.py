@@ -43,10 +43,11 @@ class BtechParser(BaseParser):
                 pass
 
         # 2. Try to find the start of CSV content
-        for header in ['title,', 'Name,']:
-            idx = content.find(header)
-            if idx != -1:
-                content = content[idx:]
+        # Strip known prefixes
+        prefixes = ["B1TECH UV", "BTECH UV"]
+        for prefix in prefixes:
+            if content.startswith(prefix):
+                content = content[len(prefix):].lstrip()
                 break
 
         try:
@@ -78,10 +79,12 @@ class BtechParser(BaseParser):
 
             col_map = {
                 'name': find_col(['title', 'name', 'channel']),
+                'location': find_col(['location', 'loc']),
+                'skip': find_col(['skip']),
                 'tx_freq': find_col(['tx_freq', 'frequency', 'tx']),
                 'rx_freq': find_col(['rx_freq', 'frequency', 'rx']),
                 'tx_sub_audio': find_col(['tx_sub_audio', 'ctcss', 'dcs', 'rToneFreq']),
-                'rx_sub_audio': find_col(['rx_sub_audio', 'ctcss', 'dcs', 'cToneF']),
+                'rx_sub_audio': find_col(['rx_sub_audio', 'ctcss', 'dcs', 'cToneF', 'cToneFreq']),
                 'tx_power': find_col(['tx_power', 'power']),
                 'bandwidth': find_col(['bandwidth']),
                 'scan': find_col(['scan']),
@@ -102,6 +105,8 @@ class BtechParser(BaseParser):
                 try:
                     ch = {}
                     ch['name'] = str(row[col_map['name']]) if col_map['name'] and not pd.isna(row[col_map['name']]) else ''
+                    ch['location'] = str(row[col_map['location']]) if col_map['location'] and not pd.isna(row[col_map['location']]) else ''
+                    ch['skip'] = str(row[col_map['skip']]) if col_map['skip'] and not pd.isna(row[col_map['skip']]) else '0'
                     
                     tx_f = format_freq_to_hz(row[col_map['tx_freq']]) if col_map['tx_freq'] else 0
                     rx_f = format_freq_to_hz(row[col_map['rx_freq']]) if col_map['rx_freq'] else 0
@@ -207,7 +212,7 @@ class BtechGenerator(BaseGenerator):
         if not channels:
             return ""
 
-        header = "title,tx_freq,rx_freq,tx_sub_audio(CTCSS=freq/DCS=number),rx_sub_audio(CTCSS=freq/DCS=number),tx_power(H/M/L),bandwidth(12500/25000),scan(0=OFF/1=ON),talk around(0=OFF/1=ON),pre_de_emph_bypass(0=OFF/1=ON),sign(0=OFF/1=ON),tx_dis(0=OFF/1=ON),bclo(0=OFF/1=ON),mute(0=OFF/1=ON),rx_modulation(0=FM/1=AM),tx_modulation(0=FM/1=AM)"
+        header = "title,tx_freq,rx_freq,tx_sub_audio(CTCSS=freq/DCS=number),rx_sub_audio(CTCSS=freq/DCS=number),tx_power(H/M/L),bandwidth(12500/25000),scan(0=OFF/1=ON),talk around(0=OFF/1=ON),pre_de_emph_bypass(0=OFF/1=ON),sign(0=OFF/1=ON),tx_dis(0=OFF/1=ON),bclo(0=OFF/1=ON),mute(0=OFF/1=ON),rx_modulation(0=FM/1=AM),tx_modulation(0=FM/1=AM),location,skip"
         output = io.StringIO()
         output.write(header + "\n")
 
@@ -228,7 +233,9 @@ class BtechGenerator(BaseGenerator):
                 '1' if ch.get('bclo', False) else '0',
                 '1' if ch.get('mute', False) else '0',
                 '0' if ch.get('rx_modulation', 'FM') == 'FM' else '1',
-                '0' if ch.get('tx_modulation', 'FM') == 'FM' else '1'
+                '0' if ch.get('tx_modulation', 'FM') == 'FM' else '1',
+                ch.get('location', ''),
+                '1' if ch.get('skip', False) else '0'
             ]
             output.write(",".join(row) + "\n")
 
