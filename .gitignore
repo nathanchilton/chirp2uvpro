@@ -56,3 +56,5 @@ Thumbs.db
 src/app/uploads/
 tests/e2E/tmp/
 pytest_output.txt
+TODO.md
+
