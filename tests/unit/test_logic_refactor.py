@@ -5,8 +5,9 @@ def test_internal_to_clipboard_json():
     channels = [{'name': 'Test', 'tx_freq_hz': 146740000.0, 'rx_freq_hz': 146740000.0}]
     output, error = internal_to_clipboard(channels)
     assert error is None
-    assert '"name": "Test"' in output
-    assert '"tx_freq_hz": 146740000.0' in output
+    assert '"n": "Test"' in output
+    assert '"tf": 146.74' in output
+    assert '"rf": 146.74' in output
 
 def test_internal_to_clipboard_empty():
     output, error = internal_to_clipboard([])
