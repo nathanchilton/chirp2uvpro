@@ -79,6 +79,8 @@ class ClipboardGenerator(BaseGenerator):
     def generate(self, channels: List[Dict[str, Any]]) -> str:
         if not channels:
             return ""
+
+        channels = channels[:30]
             
         if self.format == 'json':
             return json.dumps(channels, indent=2)

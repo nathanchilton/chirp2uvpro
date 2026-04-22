@@ -213,6 +213,8 @@ class BtechGenerator(BaseGenerator):
         if not channels:
             return ""
 
+        channels = channels[:30]
+
         header = "title,tx_freq,rx_freq,duplex,offset,tx_sub_audio,rx_sub_audio,tx_power,bandwidth,scan,talk_around,pre_de_emph_bypass,sign,tx_dis,bclo,mute,rx_modulation,tx_modulation,location,skip"
         output = io.StringIO()
         output.write(header + "\n")
