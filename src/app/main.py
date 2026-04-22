@@ -42,6 +42,10 @@ def converter_ui():
 def converter_file_ui():
     return render_template('partials/converter_file_ui.html')
 
+@app.route('/converter-text-ui', methods=['GET'])
+def converter_text_ui():
+    return render_template('partials/converter_text_ui.html')
+
 @app.route('/downloads/<filename>')
 def download_file(filename):
     file_path = os.path.join(UPLOAD_FOLDER, filename)

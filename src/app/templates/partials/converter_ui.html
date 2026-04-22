@@ -1,11 +1,11 @@
-<div class="converter-title" id="converter-title">
+<div class="converter-ui-title" id="converter-title">
     Converter
 </div>
 
 <div class="mb-3">
     <div class="row">
         <div class="col-md-6">
-            <label class="form-label">Input Format</label>
+            <label for="input-format">Input Format</label>
             <select class="form-select" name="input_format" id="input-format">
                 <option value="auto">Auto-detect</option>
                 <option value="chirp">CHIRP</option>
@@ -14,8 +14,8 @@
             </select>
         </div>
         <div class="col-md-6">
-            <label class="form-label">Output Format</label>
-            <select class="form-select" name="output_format" id="output-format">
+            <label for="output-format">Output Format</label>
+            <select class="form-select" name="output-format" id="output-format">
                 <option value="chirp">CHIRP</option>
                 <option value="btech">BTECH</option>
                 <option value="clipboard">Clipboard Sharing</option>
@@ -25,27 +25,44 @@
 </div>
 
 <div class="mb-3">
-    <div class="nav nav-chunks" id="converterTabs" role="tablist">
-        <div class="nav nav-tabs" id="converterTabsList" role="tablist">
-            <button class="nav-link active" id="upload-tab" data-bs-toggle="tab" data-bs-target="#upload" type="button" role="tab" hx-get="/converter-file-ui" hx-target="#upload-content" hx-include="#input-format, #output-format">Upload File</button>
-            <button class="nav-link" id="text-tab" data-bs-toggle="tab" data-bs-target="#text-input-area" type="button" role="tab">Text Input</button>
-        </div>
+    <div class="nav-tabs" id="converterTabsList" role="tablist">
+        <button class="nav-link active" id="upload-tab" type="button" role="tab">Upload File</button>
+        <button class="nav-link" id="text-tab" type="button" role="tab">Text Input</button>
     </div>
 </div>
 
-<div class="tab-content" id="converterTabsContent">
-    <div class="tab-pane fade show active" id="upload" role="tabpanel" aria-labelledby="upload-tab">
-        <div id="upload-content">
-            <!-- This content will be replaced by hx-get="/converter-file-ui" -->
+<div id="converter-tab-content">
+    <!-- Upload File Tab Content -->
+    <div id="upload-tab-content" class="tab-content">
+        <div class="converter-file-ui" id="upload-content">
+            <h3 class="converter-file-title">Upload and Convert CSV</h3>
+            <div class="row">
+                <div class="col-md-6">
+                    <form id="upload-form" hx-post="/api/convert/upload" enctype="multipart/form-data" hx-target="#result" hx-swap="innerHTML" hx-include="#input-format, #output-format">
+                        <div class="mb-3">
+                            <label for="file-input">Select CSV file</label>
+                            <input type="file" class="form-control" id="file-input" name="file" accept=".csv">
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100" id="upload-button">Upload and Convert</button>
+                    </form>
+                </div>
+                <div class="col-md-6">
+                    <!-- Result will be displayed in #result in the parent template -->
+                </div>
+            </div>
         </div>
     </div>
-    <div class="tab-pane fade" id="text-input-area" role="tabpanel" aria-labelledby="text-tab">
-        <form id="text-form" hx-post="/api/convert/paste" hx-target="#result" hx-swap="innerHTML" hx-include="#input-format, #output-format">
-            <div class="mb-3">
-                <textarea class="form-control" name="csv_content" rows="15" placeholder="Paste your CSV content or Clipboard Sharing text here..."></textarea>
-            </div>
-            <button type="submit" class="btn btn-primary w-100" id="convert-button">Convert</button>
-        </form>
+
+    <!-- Text Input Tab Content -->
+    <div id="text-tab-content" class="tab-content hidden">
+        <div class="mb-3">
+            <form id="text-form" hx-post="/api/convert/paste" hx-target="#result" hx-swap="innerHTML" hx-include="#input-format, #output-format">
+                <div class="mb-3">
+                    <textarea class="form-control" name="csv_content" rows="15" placeholder="Paste your CSV content or Clipboard Sharing text here..."></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary w-100" id="convert-button">Convert</button>
+            </form>
+        </div>
     </div>
 </div>
 

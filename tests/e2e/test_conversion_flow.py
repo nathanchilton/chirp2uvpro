@@ -74,12 +74,15 @@ def test_conversion_flow_paste_chirp_to_btech(page: Page):
     # 2. Verify initial state (Auto-detect)
     expect(page.locator("#input-format")).to_have_value("auto")
     expect(page.locator("#output-format")).to_have_value("chirp")
-    expect(page.locator(".converter-title")).to_contain_text("Convert")
+    expect(page.locator("#converter-title")).to_contain_text("Converter")
     
-    # 3. Prepare sample CHIRP content
+    # 3. Switch to Text Input tab
+    page.click("#text-tab")
+    
+    # 4. Prepare sample CHIRP content
     chirp_content = "Channel,Name,Frequency,Duplex,Tone,Dtune,Skip,Mode\n1,Test,146.520,0,None,None,0,FM\n2,Test2,146.550,0,None,None,0,FM"
     
-    # 4. Paste content into the textarea
+    # 5. Paste content into the textarea
     page.fill('textarea[name="csv_content"]', chirp_content)
     
     # 5. Click the Convert button
@@ -116,6 +119,7 @@ def test_conversion_flow_paste_btech_to_chirp(page: Page):
     # 2. Switch to BTECH mode
     page.select_option("#input-format", "btech")
     page.select_option("#output-format", "chirp")
+    page.click("#text-tab")
     
     # 3. Prepare sample BTECH content
     btech_content = 'BTECH UV{"chs":[{"n":"Test","f":"146.520","d":"0","t":"None","dt":"None","s":"0","m":"FM"}]}'

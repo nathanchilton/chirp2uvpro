@@ -1,13 +1,13 @@
-<div class="converter-file-ui">
-    <h3 class="converter-title">Upload and Convert CSV</h3>
+<div class="converter-file-ui" id="upload-content">
+    <h3 class="converter-file-title">Upload and Convert CSV</h3>
     <div class="row">
         <div class="col-md-6">
             <form id="upload-form" hx-post="/api/convert/upload" enctype="multipart/form-data" hx-target="#result" hx-swap="innerHTML" hx-include="#input-format, #output-format">
                 <div class="mb-3">
-                    <label for="file-input" class="form-label">Select CSV file</label>
+                    <label for="file-input">Select CSV file</label>
                     <input type="file" class="form-control" id="file-input" name="file" accept=".csv">
                 </div>
-                <button type="submit" class="btn btn-primary" id="upload-button">Upload and Convert</button>
+                <button type="submit" class="btn btn-primary w-100" id="upload-button">Upload and Convert</button>
             </form>
         </div>
         <div class="col-md-6">
