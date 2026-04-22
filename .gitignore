@@ -53,6 +53,7 @@ Thumbs.db
 # Project specific
 *.db
 *.log
+tests/data/output_*.csv
 src/app/uploads/
 tests/e2E/tmp/
 pytest_output.txt
