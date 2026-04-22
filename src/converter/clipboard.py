@@ -3,7 +3,7 @@ import pandas as pd
 import io
 from typing import List, Dict, Any
 from .base import BaseParser, BaseGenerator
-from .utils import format_freq_to_hz, format_sub_audio_to_hz, normalize_power
+from .utils import format_freq_to_hz, format_sub_audio_to_hz, format_freq_to_mhz, format_sub_audio_to_mhz, normalize_power
 
 class ClipboardParser(BaseParser):
     """
@@ -83,7 +83,22 @@ class ClipboardGenerator(BaseGenerator):
         channels = channels[:30]
             
         if self.format == 'json':
-            return json.dumps(channels, indent=2)
+            abbreviated_channels = []
+            for ch in channels:
+                new_ch = {}
+                if 'name' in ch: new_ch['n'] = ch['name']
+                if 'rx_freq_hz' in ch: new_ch['rf'] = format_freq_to_mhz(ch['rx_freq_hz'])
+                if 'tx_freq_hz' in ch: new_ch['tf'] = format_freq_to_mhz(ch['tx_freq_hz'])
+                if 'tx_sub_audio_hz' in ch: new_ch['ts'] = ch['tx_sub_audio_hz']
+                if 'scan' in ch: new_ch['s'] = 1 if ch['scan'] else 0
+                if 'tx_power' in ch: new_ch['p'] = ch['tx_power']
+                if 'id' in ch: new_ch['id'] = ch['id']
+                # Copy other keys if they exist
+                for k, v in ch.items():
+                    if k not in ['name', 'rx_freq_fmt', 'tx_freq_hz', 'tx_sub_audio_hz', 'scan', 'tx_power', 'id', 'n', 'rf', 'tf', 'ts', 's', 'p']:
+                        new_ch[k] = v
+                abbreviated_channels.append(new_ch)
+            return json.dumps({'chs': abbreviated_channels})
         elif self.format == 'csv':
             df = pd.DataFrame(channels)
             return df.to_csv(index=False)
