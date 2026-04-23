@@ -1,7 +1,7 @@
 <div class="mb-3">
     <form id="text-form" hx-post="/api/convert/paste" hx-target="#result" hx-swap="innerHTML" hx-include="#input-format, #output-format">
         <div class="mb-3">
-            <textarea class="form-control" name="csv_content" rows="15" placeholder="Paste your CSV content or Clipboard Sharing text here..."></textarea>
+            <textarea class="form-control" name="content" rows="15" placeholder="Paste your CSV content or Clipboard Sharing text here..."></textarea>
         </div>
         <button type="submit" class="btn btn-primary w-100" id="convert-button">Convert</button>
     </form>

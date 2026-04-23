@@ -144,7 +144,7 @@ def convert_format(content: str, input_format: str, output_format: str) -> tuple
 
         if not channels:
             return "", None
-
+        
         # 2. Generate from channels
         if output_format == 'chirp':
             output_csv = ChirpGenerator().generate(channels)
@@ -159,3 +159,4 @@ def convert_format(content: str, input_format: str, output_format: str) -> tuple
 
     except Exception as e:
         raise ConversionError(str(e))
+

@@ -15,7 +15,7 @@
         </div>
         <div class="col-md-6">
             <label for="output-format">Output Format</label>
-            <select class="form-select" name="output-format" id="output-format">
+            <select class="form-select" name="output_format" id="output-format">
                 <option value="chirp">CHIRP</option>
                 <option value="btech">BTECH</option>
                 <option value="clipboard">Clipboard Sharing</option>
@@ -58,7 +58,7 @@
         <div class="mb-3">
             <form id="text-form" hx-post="/api/convert/paste" hx-target="#result" hx-swap="innerHTML" hx-include="#input-format, #output-format">
                 <div class="mb-3">
-                    <textarea class="form-control" name="csv_content" rows="15" placeholder="Paste your CSV content or Clipboard Sharing text here..."></textarea>
+                    <textarea class="form-control" name="content" rows="15" placeholder="Paste your CSV content or Clipboard Sharing text here..."></textarea>
                 </div>
                 <button type="submit" class="btn btn-primary w-100" id="convert-button">Convert</button>
             </form>

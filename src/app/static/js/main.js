@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 pendingText = content;
                 
                 // If the textarea is already in the DOM, update it immediately
-                const textarea = document.querySelector('textarea[name="csv_content"]');
+                const textarea = document.querySelector('textarea[name="content"]');
                 if (textarea) {
                     textarea.value = content;
                 }
@@ -59,7 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const target = event.detail.target;
         if (target && (target.id === 'converter-tab-content' || target.closest('#converter-tab-content'))) {
             if (pendingText) {
-                const textarea = document.querySelector('textarea[name="csv_content"]');
+                const textarea = document.querySelector('textarea[name="content"]');
                 if (textarea) {
                     textarea.value = pendingText;
                 }

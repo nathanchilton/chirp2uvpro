@@ -25,7 +25,6 @@ class ChirpParser(BaseParser):
         
         try:
             df = pd.read_csv(io.StringIO(content))
-            print(f"DEBUG: Columns found: {df.columns.tolist()}")
             if df.empty:
                 return []
             
@@ -104,6 +103,7 @@ class ChirpParser(BaseParser):
 
 class ChirpGenerator(BaseGenerator):
     def generate(self, channels: List[Dict[str, Any]]) -> str:
+        print(f"DEBUG: ChirpGenerator.generate - channels count: {len(channels)}")
         if not channels:
             return ""
             

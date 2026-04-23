@@ -24,11 +24,11 @@ def test_file_upload_syncs_to_text_area(page: Page):
     page.click('#text-tab')
 
     # 5. Wait for the textarea to be populated (it might take a moment due to FileReader)
-    textarea = page.locator('textarea[name="csv_content"]')
+    textarea = page.locator('textarea[name="content"]')
     textarea.wait_for(state="visible")
     
     # Wait for the value to not be empty
-    page.wait_for_function('document.querySelector(\'textarea[name="csv_content"]\').value !== ""')
+    page.wait_for_function('document.querySelector(\'textarea[name="content"]\').value !== ""')
 
     # 6. Verify the textarea contains the content of the uploaded file
     # Use strip() to avoid issues with trailing newlines in the test file
