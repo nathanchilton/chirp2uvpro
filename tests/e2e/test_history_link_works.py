@@ -3,7 +3,7 @@ import os
 from playwright.sync_api import Page, expect
 from tests.e2e.test_conversion_flow import server, BASE_URL
 
-def test_conversion_history_link_works(page: Page):
+def test_conversion_history_link_works(page: Page, clear_db):
     """
     Test that clicking a link in the Conversion History leads to a valid download.
     """
@@ -37,26 +37,29 @@ def test_conversion_history_link_works(page: Page):
         result_locator = page.locator("#result")
         expect(result_locator).to_contain_text("uploaded and converted successfully!", timeout=10000)
 
-        # 7. Now check the history section
+        # 7. Refresh the history
+        page.click('.history-refresh-btn')
+        
+        # 8. Now check the history section
         # Wait for history to load
         history_list = page.locator("#history-list")
         expect(history_list).to_be_visible()
 
-        # 8. Find the link in history and click it
+        # 9. Find the link in history and click it
         # The link should contain the filename or at least be present
         history_link = page.locator("#history-list a").first
         expect(history_link).to_be_visible()
-        
+
         href = history_link.get_attribute("href")
         assert href is not None
         assert href.startswith("/downloads/")
 
-        # 9. Clicking the link should trigger a download
+        # 10. Clicking the link should trigger a download
         # In Playwright, we can catch the download event
-        with page.expect_download() as download_info:
+        with page.expect_download() as download_item:
             history_link.click()
         
-        download = download_info.value
+        download = download_item.value
         assert download.suggested_filename.startswith("converted_")
 
     finally:
