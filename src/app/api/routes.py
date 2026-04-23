@@ -103,20 +103,23 @@ def paste_conversion():
         
         if not output_csv:
             return 'Conversion produced no content', 200
-
-        # Persist to database
-        conn = get_db_connection()
-        with conn:
-            conn.execute(
-                'INSERT INTO conversion_history (input_filename, output_filename, status, warning) VALUES (?, ?, ?, ?)',
-                ('pasted_content', 'pasted_content_output.csv', 'success', warning)
-            )
-
-        response_text = "Content pasted and converted successfully!"
-        if warning:
-            response_text += f" Warning: {warning}"
-            
-        return response_text, 200
+        
+        # Create output filename for the session (since we don't save it to a file in paste mode, 
+        # but we want to show it in the textarea)
+        # We'll just show it in the textarea as in upload_file.
+        
+        warning_html = f'<div class="alert alert-warning mt-2 mb-0">{warning}</div>' if warning else ""
+        
+        return f'''
+        <div class="mb-3">
+            <label class="form-label">Result:</label>
+            <textarea class="form-control" rows="15" readonly role="textbox">{html.escape(output_csv)}</textarea>
+        </div>
+        <div class="alert alert-success mb-0">
+            Content pasted and converted successfully!
+            {warning_html}
+        </div>
+        ''', 200
 
     except ConversionError as e:
         return f"Unsupported input format: {str(e)}", 400

@@ -1,5 +1,6 @@
 import pytest
 import os
+import re
 import subprocess
 import time
 from playwright.sync_api import Page, expect
@@ -85,21 +86,16 @@ def test_conversion_flow_paste_chirp_to_btech(page: Page):
     # 5. Paste content into the textarea
     page.fill('textarea[name="content"]', chirp_content)
     
-    # 5. Click the Convert button
+    # 6. Click the Convert button
     page.click("#convert-button")
-    # 6. Wait for the result to appear and verify it
+    
+    # 7. Wait for the result to appear and verify it
     result_locator = page.locator("#result").first
     expect(result_locator).to_contain_text("Content pasted and converted successfully!", timeout=10000)
     
-    # 7. Check if the success alert is present
-    # (Note: For paste method, we just check the text in the result div)
-    expect(result_locator).to_contain_text("Content pasted and converted successfully!")
-    
-    # 8. Verify the converted content (should be CHIRP format)
-    # The converted content itself is NOT in the #result div,
-    # but the #result div is updated with the success message.
-    expect(result_locator).to_contain_text("Content pasted and converted successfully!")
-
+    # 8. Verify the converted content is present in the textarea
+    textarea_locator = result_locator.locator('textarea')
+    expect(textarea_locator).to_have_value(re.compile(r'Location,Name,Frequency'))
 
 def test_conversion_flow_paste_btech_to_chirp(page: Page):
     """
@@ -121,22 +117,11 @@ def test_conversion_flow_paste_btech_to_chirp(page: Page):
     
     # 5. Click the Convert button
     page.click("#convert-button")
+    
     # 6. Wait for the result to appear and verify it
     result_locator = page.locator("#result").first
     expect(result_locator).to_contain_text("Content pasted and converted successfully!", timeout=10000)
     
-    # 7. Check if the success alert is present
-    # (Note: For paste method, we just check the text in the result div)
-    expect(result_locator).to_contain_text("Content pasted and converted successfully!")
-    
-    # 8. Verify the converted content (should be CHIRP format)
-    # The converted content itself is NOT in the #result div,
-    # but the #result div is updated with the success message.
-    expect(result_locator).to_contain_text("Content pasted and converted successfully!")
-
-    
-    # 8. Verify the converted content (should be CHIRP format)
-    # The converted content itself is NOT in the #result div,
-    # but the #result div is updated with the success message.
-    expect(result_locator).to_contain_text("Content pasted and converted successfully!")
-
+    # 7. Verify the converted content is present in the textarea
+    textarea_locator = result_locator.locator('textarea')
+    expect(textarea_locator).to_have_value(re.compile(r'Channel,Name,Frequency'))
