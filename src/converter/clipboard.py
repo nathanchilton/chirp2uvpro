@@ -98,7 +98,7 @@ class ClipboardGenerator(BaseGenerator):
                     if k not in ['name', 'rx_freq_fmt', 'tx_freq_hz', 'tx_sub_audio_hz', 'scan', 'tx_power', 'id', 'n', 'rf', 'tf', 'ts', 's', 'p']:
                         new_ch[k] = v
                 abbreviated_channels.append(new_ch)
-            return json.dumps({'chs': abbreviated_channels})
+            return f"Copy this text and start BTECH UV{json.dumps({'chs': abbreviated_channels})}"
         elif self.format == 'csv':
             df = pd.DataFrame(channels)
             return df.to_csv(index=False)

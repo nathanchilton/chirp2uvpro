@@ -18,7 +18,7 @@ def test_conversion_flow_upload_chirps_to_btech(page: Page):
 
     # 3. Ensure we are in the file upload UI
     expect(page.locator(".converter-file-ui")).to_be_visible()
-    expect(page.locator("h3.converter-title")).to_contain_text("Upload and Convert CSV")
+    expect(page.locator("h3.converter-file-title")).to_contain_text("Upload and Convert CSV")
 
     # 4. Select the file to upload
     page.set_input_files('#file-input', TEST_FILE_PATH)
