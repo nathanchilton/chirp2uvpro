@@ -8,6 +8,7 @@ from flask import Flask, render_template, request, send_file
 from werkzeug.exceptions import HTTPException
 from converter.logic import chirp_to_btech, btech_to_chirp, ConversionError
 from app.api.routes import api_bp, UPLOAD_FOLDER
+from database import init_db
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG, format='%(levelname)s: %(message)s')
@@ -56,5 +57,6 @@ def download_file(filename):
     return send_file(file_path, as_attachment=True)
 
 if __name__ == '__main__':
+    init_db()
     app.run(debug=False, host='0.0.0.0', port=5000)
 
