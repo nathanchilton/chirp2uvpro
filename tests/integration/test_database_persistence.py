@@ -42,8 +42,9 @@ def test_database_persistence_text_paste(page: Page, clear_db):
     """
     # 1. Perform paste via Playwright
     page.goto(BASE_URL)
+    page.click("#text-tab")
     csv_content = "column1,column2\nvalue1,value2"
-    page.fill('textarea[name="csv_content"]', csv_content)
+    page.fill('textarea[name="content"]', csv_content)
     page.click('button[id="convert-button"]')
     # Wait for the paste to complete and result to be displayed
     expect(page.locator("#result")).to_contain_text("converted successfully!", timeout=10000)
