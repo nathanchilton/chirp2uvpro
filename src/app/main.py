@@ -5,6 +5,7 @@ import logging
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from flask import Flask, render_template, request, send_file
+from werkzeug.exceptions import HTTPException
 from converter.logic import chirp_to_btech, btech_to_chirp, ConversionError
 from app.api.routes import api_bp, UPLOAD_FOLDER
 
@@ -20,6 +21,9 @@ app.register_blueprint(api_bp, url_prefix='/api')
 @app.errorhandler(Exception)
 def handle_exception(e):
     """Logs the error and returns a 500 error."""
+    if isinstance(e, HTTPException):
+        return e
+
     app.logger.error("An unhandled exception occurred:")
     app.logger.error(traceback.format_exc())
     return {"error": "Internal Server Error", "message": str(e)}, 500

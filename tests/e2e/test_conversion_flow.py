@@ -124,4 +124,4 @@ def test_conversion_flow_paste_btech_to_chirp(page: Page):
     
     # 7. Verify the converted content is present in the textarea
     textarea_locator = result_locator.locator('textarea')
-    expect(textarea_locator).to_have_value(re.compile(r'Channel,Name,Frequency'))
+    expect(textarea_locator).to_have_value(re.compile(r'Location,Name,Frequency'))
