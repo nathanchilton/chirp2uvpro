@@ -101,6 +101,14 @@ def paste_conversion():
         
         output_csv, warning = convert_format(content, input_format, output_format)
         
+        conn = get_db_connection()
+        with conn:
+            conn.execute(
+                'INSERT INTO conversion_history (input_filename, output_filename, status, warning) VALUES (?, ?, ?, ?)',
+                ('pasted_content', 'pasted_content', 'success', warning)
+            )
+        conn.close()
+        
         if not output_csv:
             return 'Conversion produced no content', 200
         
