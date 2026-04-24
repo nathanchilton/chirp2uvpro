@@ -74,7 +74,7 @@ def test_conversion_flow_paste_chirp_to_btech(page: Page):
     
     # 2. Verify initial state (Auto-detect)
     expect(page.locator("#input-format")).to_have_value("auto")
-    expect(page.locator("#output-format")).to_have_value("chirp")
+    expect(page.locator("#output-format")).to_have_value("btech")
     expect(page.locator("#converter-title")).to_contain_text("Converter")
     
     # 3. Switch to Text Input tab
@@ -95,7 +95,7 @@ def test_conversion_flow_paste_chirp_to_btech(page: Page):
     
     # 8. Verify the converted content is present in the textarea
     textarea_locator = result_locator.locator('textarea')
-    expect(textarea_locator).to_have_value(re.compile(r'Location,Name,Frequency'))
+    expect(textarea_locator).to_have_value(re.compile(r'title,tx_freq'))
 
 def test_conversion_flow_paste_btech_to_chirp(page: Page):
     """
