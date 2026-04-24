@@ -135,6 +135,21 @@ def paste_conversion():
         return str(e), 500
 
 
+@api_bp.route('/location', methods=['POST'])
+def set_location():
+    data = request.get_json()
+    if not data or 'latitude' not in data or 'longitude' not in data:
+        return jsonify({"error": "Missing latitude or longitude"}), 400
+    
+    lat = data.get('latitude')
+    lon = data.get('longitude')
+    
+    # For now, we just log it and return success. 
+    # In a real app, we might store this in the session or database.
+    print(f"Received location: Lat {lat}, Lon {lon}")
+    
+    return jsonify({"status": "success", "message": f"Location updated: {lat}, {lon}"}), 200
+
 @api_bp.route('/history/fragment', methods=['GET'])
 def history_fragment():
     conn = get_db_connection()
