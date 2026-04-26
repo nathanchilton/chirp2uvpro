@@ -58,24 +58,13 @@ Parameters:
 - `path` (string, optional): Directory to search in
 - `include` (string, optional): File pattern filter like `*.js`
 
-### todowrite
-Track tasks and progress. The `todos` parameter MUST be a JSON array of objects, NOT a string.
-Parameters:
-- `todos` (array of objects, REQUIRED): Each object has:
-  - `content` (string, REQUIRED): Brief description of the task
-  - `status` (string, REQUIRED): One of: `pending`, `in_progress`, `completed`, `cancelled`
-  - `priority` (string, REQUIRED): One of: `high`, `medium`, `low`
-
-Example: `{"todos": [{"content": "Add game over screen", "status": "in_progress", "priority": "high"}, {"content": "Add sound effects", "status": "pending", "priority": "low"}]}`
-
-IMPORTANT: `todos` MUST be an array `[...]`, NOT a string `"[...]"`. Never stringify the array.
 
 ## IMPORTANT REMINDERS
 
 - The `bash` tool REQUIRES both `command` AND `description` fields. Always include both.
 - The `write` tool parameter is `filePath` (camelCase), NOT `file_path`.
 - The `edit` tool uses `oldString`/`newString` (camelCase), NOT `old_string`/`new_string`.
-- Do NOT call tools that don't exist. Available tools: bash, read, write, edit, glob, grep, task, webfetch, todowrite, question, skill.
+- Do NOT call tools that don't exist. Available tools: bash, read, write, edit, glob, grep, task, webfetch, question, skill.
 - There is NO `list` tool. To list files use `bash` with `ls`.
 
 <!-- BEGIN BEADS INTEGRATION v:1 profile:minimal hash:ca08a54f -->

@@ -54,7 +54,6 @@ def test_chirp_roundtrip_with_example_file():
     assert (original_subset['Name'] == back_subset['Name']).all()
     
     # Check that the frequencies are the same (within precision)
-    # We know this will FAIL because of the scaling issue
     pd.testing.assert_series_equal(original_subset['Frequency'], back_subset['Frequency'], check_dtype=False)
 
 if __name__ == "__main__":

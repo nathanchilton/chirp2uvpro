@@ -1,8 +1,8 @@
 import pandas as pd
 import io
+import pytest
 from converter.chirp import ChirpParser, ChirpGenerator
 from converter.btech import BtechParser, BtechGenerator
-from converter.btech import BtechGenerator
 
 def test_comprehensive_roundtrip():
     # A comprehensive BTECH data set
@@ -46,10 +46,10 @@ TestCh3,462.55,0,0,Tone,200.0,L,1,0,1,0,1,0,1
         # Check all critical fields
         assert orig['name'] == final['name']
         # Use approx for floats
-        assert orig['tx_freq_hz'] == pytest_approx(final['tx_freq_hz'])
-        assert orig['rx_freq_hz'] == pytest_approx(final['rx_freq_hz'])
-        assert orig['tx_sub_audio_hz'] == pytest_approx(final['tx_sub_audio_hz'])
-        assert orig['rx_sub_audio_hz'] == pytest_approx(final['rx_sub_audio_hz'])
+        assert orig['tx_freq_hz'] == pytest.approx(final['tx_freq_hz'])
+        assert orig['rx_freq_hz'] == pytest.approx(final['rx_freq_hz'])
+        assert orig['tx_sub_audio_hz'] == pytest.approx(final['tx_sub_audio_hz'])
+        assert orig['rx_sub_audio_hz'] == pytest.approx(final['rx_sub_audio_hz'])
         assert orig['tx_power'] == final['tx_power']
         assert orig['scan'] == final['scan']
         assert orig['talk_around'] == final['talk_around']
@@ -58,10 +58,6 @@ TestCh3,462.55,0,0,Tone,200.0,L,1,0,1,0,1,0,1
         assert orig['tx_dis'] == final['tx_dis']
         assert orig['bclo'] == final['bclo']
         assert orig['pre_de_emph_bypass'] == final['pre_de_emph_bypass']
-
-def pytest_approx(val):
-    import pytest
-    return pytest.approx(val)
 
 if __name__ == "__main__":
     import pytest
