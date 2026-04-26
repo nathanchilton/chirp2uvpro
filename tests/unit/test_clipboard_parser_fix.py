@@ -14,8 +14,8 @@ def test_clipboard_parser_with_json_prefix():
     assert channels[0]['tx_power'] == '0'
 
 def test_clipboard_parser_with_csv_prefix():
-    content = 'BTECH UVtitle,tx_freq,rx_freq\nTest,146520000,146520000'
+    content = 'BTECH UVname,tx_freq_hz,rx_freq_hz\nTest,146520000,146520000'
     parser = ClipboardParser()
     channels = parser.parse(content)
     assert len(channels) == 1
-    assert channels[0]['title'] == 'Test'
+    assert channels[0]['name'] == 'Test'

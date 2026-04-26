@@ -54,7 +54,7 @@ class ClipboardParser(BaseParser):
                 pass
 
         # Try to find the start of CSV content
-        for header in ['title,', 'Name,']:
+        for header in ['title,', 'Name,', 'name,']:
             idx = content.find(header)
             if idx != -1:
                 content = content[idx:]

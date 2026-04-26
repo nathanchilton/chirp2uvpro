@@ -5,12 +5,12 @@ from src.converter.clipboard import ClipboardParser
 from src.converter.logic import chirp_to_btech, btech_to_chirp, ConversionError
 def test_clipboard_parser_with_prefix():
     prefix = "BTECH UV"
-    content = f"{prefix}title,tx_freq,rx_freq\nTest,146520000,146520000"
+    content = f"{prefix}name,tx_freq_hz,rx_freq_hz\nTest,146520000,146520000"
     parser = ClipboardParser()
     channels = parser.parse(content)
     assert len(channels) == 1
-    assert channels[0]['title'] == 'Test'
-    assert channels[0]['tx_freq'] == 146520000
+    assert channels[0]['name'] == 'Test'
+    assert channels[0]['tx_freq_hz'] == 146520000.0
 
 def test_clipboard_parser_json():
     json_content = '{"chs":[{"n":"N5RCA","rf":"146.780","tf":"146.180","ts":13180,"s":1,"id":1,"p":0}]}'
