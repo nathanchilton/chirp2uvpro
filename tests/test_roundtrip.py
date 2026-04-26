@@ -53,7 +53,7 @@ class TestLosslessRoundTrip(unittest.TestCase):
         self.assertEqual(btech_channels_back[0]['tx_freq_hz'], 462000000.0)
         self.assertEqual(btech_channels_back[0]['tx_sub_audio_hz'], 1000)
         self.assertEqual(btech_channels_back[0]['name'], 'Test Channel')
-        self.assertEqual(btech_channels_back[0]['skip'], '0')
+        self.assertEqual(btech_channels_back[0]['skip'], False)
         self.assertEqual(btech_channels_back[0]['location'], 'Test Loc')
 
 if __name__ == "__main__":

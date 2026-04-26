@@ -32,16 +32,15 @@ def test_chirp_to_btech_basic():
     assert "146.78" in output
     assert warning is None
 
-def test_chirp_to_btech_truncation():
+def test_chirp_to_btech_large_input():
     # Create 35 rows of data
-    header = "Name,Frequency,Duplex,Offset,Tone,rToneFreq,c%s,DtcsCode,DtcsPolarity,RxDtcsCode,CrossMode,Mode,TStep,Skip,Power,Comment,URCALL,RPT1CALL,RPT2CALL,DVCODE".replace('%s', 'cToneF')
+    header = "Name,Frequency,Duplex,Offset,Tone,rTref,c%s,DtcsCode,DtcsPolarity,RxDtcsCode,CrossMode,Mode,TStep,Skip,Power,Comment,URCALL,RPT1CALL,RPT2CALL,DVCODE".replace('%s', 'cToneF')
     rows = [header]
     for i in range(35):
         rows.append(f"Name{i},146.0,-,0.0,Tone,131.8,8MA,023,NN,0s,Tone->Tone,FM,5.0,,4.0W,,,,")
     csv_content = "\n".join(rows)
     output, warning = chirp_to_btech(csv_content)
-    assert warning is not None
-    assert "Truncated" in warning
+    assert warning is None
 
 def test_chirp_to_btech_empty_input():
     output, warning = chirp_to_btech("")

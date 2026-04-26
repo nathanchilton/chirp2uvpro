@@ -82,9 +82,6 @@ def chirp_to_btech(csv_content: str) -> tuple[str, str | None]:
             return "", None
         
         warning = None
-        if len(channels) > 30:
-            warning = "Truncated"
-            channels = channels[:30]
             
         return generator.generate(channels), warning
     except Exception as e:

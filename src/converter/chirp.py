@@ -38,14 +38,21 @@ class ChirpParser(BaseParser):
                 tx_f = format_freq_to_hz(tx_f_val)
                 
                 rx_f_val = next((row[k] for k in ['rx_freq', 'rx_frequency', 'rx'] if k in row and pd.notna(row[k])), None)
-                duplex = '-'
+                duplex = 'none'
                 offset_hz = 0.0
+                
+                # Always try to get duplex and offset if they exist
+                duplex_val = row.get('Duplex', None)
+                if pd.notna(duplex_val):
+                    duplex = str(duplex_val).strip()
+                
+                offset_val = row.get('Offset', 0)
+                if pd.notna(offset_val):
+                    offset_hz = format_freq_to_hz(offset_val)
+
                 if rx_f_val is not None:
                     rx_f = format_freq_to_hz(rx_f_val)
                 else:
-                    duplex = str(row.get('Duplex', '-')).strip()
-                    offset_val = row.get('Offset', 0)
-                    offset_hz = format_freq_to_hz(offset_val)
                     if duplex == '-':
                         rx_f = tx_f - offset_hz
                     elif duplex == '+':
@@ -124,7 +131,7 @@ class ChirpGenerator(BaseGenerator):
                 ch_row['Duplex'] = '-'
                 ch_row['Offset'] = (tx_f_hz - rx_f_hz) / 1_000_000
             else:
-                ch_row['Duplex'] = '-'
+                ch_row['Duplex'] = 'none'
                 ch_row['Offset'] = 0.0
                 
             tx_sub = ch.get('tx_sub_audio_hz', 0)

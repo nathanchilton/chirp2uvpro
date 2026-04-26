@@ -107,7 +107,7 @@ class BtechParser(BaseParser):
                     ch = {}
                     ch['name'] = str(row[col_map['name']]) if col_map['name'] and not pd.isna(row[col_map['name']]) else ''
                     ch['location'] = str(row[col_map['location']]) if col_map['location'] and not pd.isna(row[col_map['location']]) else ''
-                    ch['skip'] = str(row[col_map['skip']]) if col_map['skip'] and not pd.isna(row[col_map['skip']]) else '0'
+                    ch['skip'] = is_true(row[col_map['skip']]) if col_map['skip'] and not pd.isna(row[col_map['skip']]) else False
                     
                     tx_f = format_freq_to_hz(row[col_map['tx_freq']]) if col_map['tx_freq'] else 0
                     rx_f = format_freq_to_hz(row[col_map['rx_freq']]) if col_map['rx_freq'] else 0
@@ -143,7 +143,10 @@ class BtechParser(BaseParser):
                     ch['tx_freq_hz'] = float(tx_f)
                     ch['rx_freq_hz'] = float(rx_f)
                     ch['tx_sub_audio_hz'] = format_sub_audio_to_hz(row[col_map['tx_sub_audio']]) if col_map['tx_sub_audio'] and not pd.isna(row[col_map['tx_sub_audio']]) else 0
-                    ch['rx_sub_audio_hz'] = format_sub_audio_to_hz(row[col_map['rx_sub_audio']]) if col_map['rx_sub_audio'] and not pd.isna(row[col_map['rx_sub_audio']]) else 0
+                    if col_map['rx_freq'] and (pd.isna(row[col_map['rx_freq']]) or row[col_map['rx_freq']] == 0):
+                        ch['rx_sub_audio_hz'] = ch['tx_sub_audio_hz']
+                    else:
+                        ch['rx_sub_audio_hz'] = format_sub_audio_to_hz(row[col_map['rx_sub_audio']]) if col_map['rx_sub_audio'] and not pd.isna(row[col_map['rx_sub_audio']]) else 0
 
                     ch['tx_power'] = normalize_power(str(row[col_map['tx_power']])) if col_map['tx_power'] and not pd.isna(row[col_map['tx_power']]) else 'M'
                     
