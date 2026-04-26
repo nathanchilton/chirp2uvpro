@@ -11,6 +11,8 @@ Name,Frequency,Duplex,Offset,Tone,rToneFreq,Power,Scan,TalkAround,Mute,Sign,TxDi
 TestCh1,462.55,0,0,Tone,100.0,M,1,1,1,1,1,1,1
 TestCh2,462.55,0,0,None,0,H,0,0,0,0,0,0,0
 TestCh3,462.55,0,0,Tone,200.0,L,1,0,1,0,1,0,1
+TestCh4,146.74,1,0.001,Tone,600.0,M,0,0,1,0,0,0,1
+TestCh5,440.0,0,0,None,0,H,1,1,0,1,0,1,0
 """
     
     print("Starting Comprehensive Round-trip test...")

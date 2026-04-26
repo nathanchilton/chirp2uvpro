@@ -22,10 +22,9 @@ class ClipboardParser(BaseParser):
             if idx != -1:
                 if json_start == -1 or idx < json_start:
                     json_start = idx
-
+        
         if json_start != -1:
             try:
-                import json
                 json_content = content[json_start:]
                 data = json.loads(json_content)
                 
@@ -64,10 +63,18 @@ class ClipboardParser(BaseParser):
             df = pd.read_csv(io.StringIO(content))
             if df.empty:
                 return []
-            return df.to_dict(orient='records')
+            
+            channels = df.to_dict(orient='records')
+            for ch in channels:
+                for k, v in ch.items():
+                    k_lower = k.lower()
+                    if any(x in k_lower for x in ['rx_freq', 'tx_freq', 'rx_freq_hz', 'tx_freq_hz', 'rf', 'tf']):
+                        ch[k] = format_freq_to_hz(v)
+                    if any(x in k_lower for x in ['tx_sub_audio', 'tx_sub_audio_hz', 'ts', 'rx_sub_audio', 'rx_sub_audio_hz', 'rs']):
+                        ch[k] = format_sub_audio_to_hz(v)
+            return channels
         except Exception:
             return []
-
 
 class ClipboardGenerator(BaseGenerator):
     """
