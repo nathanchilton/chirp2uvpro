@@ -124,7 +124,16 @@ class BtechParser(BaseParser):
                             elif duplex == '+':
                                 rx_f = tx_f + offset_f
                         else:
-                            rx_f = tx_f + offset_f
+                            # If duplex is NaN, infer it from rx_f and tx_f
+                            if rx_f > tx_f:
+                                ch['duplex'] = '+'
+                                rx_f = tx_f + offset_f
+                            elif rx_f < tx_f:
+                                ch['duplex'] = '-'
+                                rx_f = tx_f - offset_f
+                            else:
+                                ch['duplex'] = 'none'
+                                rx_f = tx_f
                     else:
                         ch['offset_hz'] = 0.0
                         ch['duplex'] = 'none'
