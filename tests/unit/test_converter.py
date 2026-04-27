@@ -9,24 +9,24 @@ def test_clipboard_parser_with_prefix():
     parser = ClipboardParser()
     channels = parser.parse(content)
     assert len(channels) == 1
-    assert channels[0]['name'] == 'Test'
-    assert channels[0]['tx_freq_hz'] == 146520000.0
+    assert channels[0].name == 'Test'
+    assert channels[0].tx_freq_hz == 146520000.0
 
 def test_clipboard_parser_json():
     json_content = '{"chs":[{"n":"N5RCA","rf":"146.780","tf":"146.180","ts":13180,"s":1,"id":1,"p":0}]}'
     parser = ClipboardParser()
     channels = parser.parse(json_content)
     assert len(channels) == 1
-    assert channels[0]['name'] == 'N5RCA'
-    assert channels[0]['rx_freq_hz'] == 146780000.0
-    assert channels[0]['tx_freq_hz'] == 146180000.0
-    assert channels[0]['tx_sub_audio_hz'] == 13180.0
-    assert channels[0]['scan'] is True
-    assert channels[0]['tx_power'] == '0'
+    assert channels[0].name == 'N5RCA'
+    assert channels[0].rx_freq_hz == 146780000.0
+    assert channels[0].tx_freq_hz == 146180000.0
+    assert channels[0].tx_sub_audio_hz == 13180.0
+    assert channels[0].scan is True
+    assert channels[0].tx_power == '0'
 BTECH_HEADER = "title,tx_freq,rx_freq,tx_sub_audio(CTCSS=freq/DCS=number),rx_sub_audio(CTCSS=freq/DCS=number),tx_power(H/M/L),bandwidth(12500/25000),scan(0=OFF/1=ON),talk around(0=OFF/1=ON),pre_de_emph_bypass(0=OFF/1=ON),sign(0=OFF/1=ON),tx_dis(0=OFF/1=ON),bclo(0=OFF/1=ON),mute(0=OFF/1=ON),rx_modulation(0=FM/1=AM),tx_modulation(0=FM/1=AM)"
 
 def test_chirp_to_btech_basic():
-    csv_content = "Name,Frequency,Duplex,Offset,Tone,rToneFreq,cToneF,DtcsCode,DtcsPolarity,RxDtcsCode,CrossMode,Mode,TStep,Skip,Power,Comment,URCALL,RPT1CALL,RPT2CALL,DVCODE\nN5RCA,146.780000,-,0.600000,Tone,131.8,8MA,023,NN,023,Tone->Tone,FM,5.00,,4.0W,,,,,"
+    csv_content = "Name,Frequency,Duplex,Offset,Tone,rToneFreq,cToneF,DtcsCode,DtcsPolarity,RxDtcsCode,CrossMode,Mode,TStep,Skip,Power,Comment,URCALL,RPT1CALL,RPT2CALL,DVCODE\nN5RCA,146.780000,-,0.600000,Tone,131.8,8MA,023,NN,02fmt,Tone->Tone,FM,5.00,,4.0W,,,,,"
     output, warning = chirp_to_btech(csv_content)
     assert "N5RCA" in output
     assert "146.78" in output
@@ -98,6 +98,3 @@ def test_integration_pipeline():
     assert "Tone" in output_chirp
     assert "0.0001318" in output_chirp
     assert "FM" in output_chirp
-
-
-

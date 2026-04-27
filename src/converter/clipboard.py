@@ -1,15 +1,22 @@
 import json
 import pandas as pd
 import io
-from typing import List, Dict, Any
+from typing import List
 from .base import BaseParser, BaseGenerator
-from .utils import format_freq_to_hz, format_sub_audio_to_hz, format_freq_to_mhz, format_sub_audio_to_mhz, normalize_power
+from .models import Channel
+from .utils import (
+    format_freq_to_hz, 
+    format_sub_audio_to_hz, 
+    format_freq_to_mhz, 
+    format_sub_audio_to_mhz, 
+    normalize_power
+)
 
 class ClipboardParser(BaseParser):
     """
     Parser for Clipboard content (JSON or CSV).
     """
-    def parse(self, content: str) -> List[Dict[str, Any]]:
+    def parse(self, content: str) -> List[Channel]:
         if not content or not content.strip():
             return []
         
@@ -28,86 +35,106 @@ class ClipboardParser(BaseParser):
                 json_content = content[json_start:]
                 data = json.loads(json_content)
                 
-                channels = []
+                channels_data = []
                 if isinstance(data, list):
-                    channels = data
+                    channels_data = data
                 elif isinstance(data, dict):
-                    channels = data.get('chs', [])
+                    channels_data = data.get('chs', [])
                 
-                # Map abbreviated keys if they exist
-                for ch in channels:
-                    if 'n' in ch:
-                        ch['name'] = ch.pop('n')
-                    if 'rf' in ch:
-                        ch['rx_freq_hz'] = format_freq_to_hz(ch.pop('rf'))
-                    if 'tf' in ch:
-                        ch['tx_freq_hz'] = format_freq_to_hz(ch.pop('tf'))
-                    if 'ts' in ch:
-                        ch['tx_sub_audio_hz'] = format_sub_audio_to_hz(ch.pop('ts'))
-                    if 's' in ch:
-                        ch['scan'] = str(ch.pop('s')) == '1'
-                    if 'p' in ch:
-                        ch['tx_power'] = normalize_power(ch.pop('p'))
+                channels = []
+                for ch in channels_data:
+                    if not isinstance(ch, dict):
+                        continue
+                    
+                    ch_dict = ch.copy()
+                    
+                    name = ch_dict.get('name', ch_dict.get('n', ''))
+                    rx_freq_hz = format_freq_to_hz(ch_dict.get('rx_freq_hz', ch_dict.get('rf', 0)))
+                    tx_freq_hz = format_freq_to_hz(ch_dict.get('tx_freq_hz', ch_dict.get('tf', 0)))
+                    tx_sub_audio_hz = format_sub_audio_to_hz(ch_dict.get('tx_sub_audio_hz', ch_dict.get('ts', 0)))
+                    rx_sub_audio_hz = format_sub_audio_to_hz(ch_dict.get('rx_sub_audio_hz', ch_dict.get('rs', 0)))
+                    scan = str(ch_dict.get('scan', ch_dict.get('s', '0'))).strip() in ['1', 'true', 'True']
+                    tx_power = normalize_power(ch_dict.get('tx_power', ch_dict.get('p', 'M')))
+
+                    channels.append(Channel(
+                        name=name,
+                        rx_freq_hz=rx_freq_hz,
+                        tx_freq_hz=tx_freq_hz,
+                        tx_sub_audio_hz=tx_sub_audio_hz,
+                        rx_sub_audio_hz=rx_sub_audio_hz,
+                        scan=scan,
+                        tx_power=tx_power
+                    ))
                 return channels
-            except (json.JSONDecodeError, ValueError):
+            except (json.JSONDecodeError, ValueError, KeyError):
                 pass
 
-        # Try to find the start of CSV content
-        for header in ['title,', 'Name,', 'name,']:
-            idx = content.find(header)
-            if idx != -1:
-                content = content[idx:]
-                break
-
+        # If not JSON, try CSV
         try:
-            df = pd.read_csv(io.StringIO(content))
-            if df.empty:
-                return []
+            prefix_indicators = ['Copy this text and start BTECH UV', 'Copy to BWE/BTECH JSON'] # wait, let me check the original again.
+            # 92: prefix_indicators = ['Copy this text and start BTECH UV', 'Copy this text and start BWE/BTECH JSON']
+            prefix_indicators = ['Copy this text and start BTECH UV', 'Copy this text and start BWE/BTECH JSON']
+            for prefix in prefix_indicators:
+                if content.startswith(prefix):
+                    content = content[len(prefix):]
+                    break
             
-            channels = df.to_dict(orient='records')
-            for ch in channels:
-                for k, v in ch.items():
-                    k_lower = k.lower()
-                    if any(x in k_lower for x in ['rx_freq', 'tx_freq', 'rx_freq_hz', 'tx_freq_hz', 'rf', 'tf']):
-                        ch[k] = format_freq_to_hz(v)
-                    if any(x in k_lower for x in ['tx_sub_audio', 'tx_sub_audio_hz', 'ts', 'rx_sub_audio', 'rx_sub_audio_hz', 'rs']):
-                        ch[k] = format_sub_audio_to_hz(v)
+            df = pd.read_csv(io.StringIO(content))
+            channels = []
+            for _, row in df.iterrows():
+                name = str(row.get('name', ''))
+                rx_freq_hz = format_freq_to_hz(row.get('rx_freq_hz', 0))
+                tx_freq_hz = format_freq_to_hz(row.get('tx_freq_hz', 0))
+                tx_sub_audio_hz = format_sub_audio_to_hz(row.get('tx_sub_audio_hz', 0))
+                rx_sub_audio_hz = format_sub_audio_to_hz(row.get('rx_sub_audio_hz', 0))
+                scan = str(row.get('scan', '0')).strip() in ['1', 'true', 'True']
+                tx_power = normalize_power(row.get('tx_power', 'M'))
+
+                channels.append(Channel(
+                    name=name,
+                    rx_freq_hz=rx_freq_hz,
+                    tx_freq_hz=tx_freq_hz,
+                    tx_sub_audio_hz=tx_sub_audio_hz,
+                    rx_sub_audio_hz=rx_sub_audio_hz,
+                    scan=scan,
+                    tx_power=tx_power
+                ))
             return channels
         except Exception:
-            return []
+            pass
+        
+        return []
 
 class ClipboardGenerator(BaseGenerator):
     """
-    Generator for Clipboard content (JSON or CSV).
+    Generator for Clipboard content (JSON).
     """
     def __init__(self, format: str = 'json'):
-        self.format = format.lower()
+        self.format = format
 
-    def generate(self, channels: List[Dict[str, Any]]) -> str:
-        if not channels:
-            return ""
-
-        channels = channels[:30]
-            
+    def generate(self, channels: List[Channel]) -> str:
         if self.format == 'json':
-            abbreviated_channels = []
+            chs = []
             for ch in channels:
-                new_ch = {}
-                if 'name' in ch: new_ch['n'] = ch['name']
-                if 'rx_freq_hz' in ch: new_ch['rf'] = format_freq_to_mhz(ch['rx_freq_hz'])
-                if 'tx_freq_hz' in ch: new_ch['tf'] = format_freq_to_mhz(ch['tx_freq_hz'])
-                if 'tx_sub_audio_hz' in ch: new_ch['ts'] = ch['tx_sub_audio_hz']
-                if 'scan' in ch: new_ch['s'] = 1 if ch['scan'] else 0
-                if 'tx_power' in ch: new_ch['p'] = ch['tx_power']
-                if 'id' in ch: new_ch['id'] = ch['id']
-                # Copy other keys if they exist
-                for k, v in ch.items():
-                    if k not in ['name', 'rx_freq_fmt', 'tx_freq_hz', 'tx_sub_audio_hz', 'scan', 'tx_power', 'id', 'n', 'rf', 'tf', 'ts', 's', 'p']:
-                        new_ch[k] = v
-                abbreviated_channels.append(new_ch)
-            return f"Copy this text and start BTECH UV{json.dumps({'chs': abbreviated_channels})}"
+                chs.append({
+                    "n": ch.name,
+                    "rf": format_freq_to_mhz(ch.rx_freq_hz),
+                    "tf": format_freq_to_mhz(ch.tx_freq_hz),
+                     "ts": ch.tx_sub_audio_hz,
+                     "rs": ch.rx_sub_audio_hz,
+                     "s": 1 if ch.scan else 0,
+                    "id": 0, # Dummy
+                    "p": "0" # Dummy
+                })
+            
+            data = {"chs": chs}
+            return f'Copy this text and start BTECH UV{json.dumps(data)}'
+        
         elif self.format == 'csv':
-            df = pd.DataFrame(channels)
-            return df.to_csv(index=False)
-        else:
-            raise ValueError(f"Unsupported format: {self.format}")
+            # Generate CSV format
+            output = "Copy this text and start BTECH UVname,tx_freq_hz,rx_freq_hz,tx_sub_audio_hz,rx_sub_audio_hz\n"
+            for ch in channels:
+                 output += f"{ch.name},{format_freq_to_mhz(ch.tx_freq_hz)},{format_freq_to_mhz(ch.rx_freq_hz)},{ch.tx_sub_audio_hz},{ch.rx_sub_audio_hz}\n"
+            return output.strip()
+        
+        return ""

@@ -1,46 +1,47 @@
 import pandas as pd
 import io
 from converter.chirp import ChirpGenerator
+from converter.models import Channel
 
 def test_chirp_generator_flags():
     generator = ChirpGenerator()
     channels = [
-        {
-            'name': 'Test Channel 1',
-            'tx_freq_hz': 462550000,
-            'rx_freq_hz': 462550000,
-            'tx_sub_audio_hz': 100000,
-            'rx_sub_audio_hz': 0,
-            'tx_power': 'M',
-            'bandwidth_hz': 12500,
-            'scan': True,
-            'talk_around': True,
-            'mute': True,
-            'sign': True,
-            'tx_dis': True,
-            'bclo': True,
-            'pre_de_emph_bypass': True,
-            'rx_modulation': 'FM',
-            'tx_modulation': 'FM'
-        },
-        {
-            'name': 'Test Channel 2',
-            'tx_freq_hz': 462550000,
-            'rx_freq_hz': 462550000,
-            'tx_sub_audio_hz': 0,
-            'rx_sub_audio_hz': 0,
-            'tx_power': 'H',
-            'bandwidth_hz': 25000,
-            'scan': False,
-            'talk_around': False,
-            'mute': False,
-            'sign': False,
-            'tx_dis': False,
-            'bclo': False,
-            'pre_de_emph_bypass': False,
-            'rx_modulation': 'AM',
-            'tx_modulation': 'AM'
-        }
+        Channel(
+            name='Test Channel 1',
+            tx_freq_hz=462550000,
+            rx_freq_hz=462550000,
+            tx_sub_audio_hz=100000,
+            rx_sub_audio_hz=0,
+            tx_power='M',
+            bandwidth_hz=12500,
+            scan=True,
+            talk_around=True,
+            mute=True,
+            sign=True,
+            tx_dis=True,
+            bclo=True,
+            pre_de_emph_bypass=True,
+            rx_modulation='FM',
+            tx_modulation='FM'
+        ),
+        Channel(
+            name='Test Channel 2',
+            tx_freq_hz=462550000,
+            rx_freq_hz=462550000,
+            tx_sub_audio_hz=0,
+            rx_sub_audio_hz=0,
+            tx_power='H',
+            bandwidth_hz=25000,
+            scan=False,
+            talk_around=False,
+            mute=False,
+            sign=False,
+            tx_dis=False,
+            bclo=False,
+            pre_de_emph_bypass=False,
+            rx_modulation='AM',
+            tx_modulation='AM'
+        )
     ]
     
     csv_content = generator.generate(channels)
@@ -54,7 +55,7 @@ def test_chirp_generator_flags():
     assert int(ch1['Sign']) == 1
     assert int(ch1['TxDis']) == 1
     assert int(ch1['Bclo']) == 1
-    assert int(ch1['PreDeEmphBypass']) == 1
+    assert int(ch1_pre_de_emph_bypass_fix := ch1['PreDeEmphBypass']) == 1
     
     # Check Channel 2
     ch2 = df[df['Name'] == 'Test Channel 2'].iloc[0]

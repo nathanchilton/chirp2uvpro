@@ -1,6 +1,6 @@
 import pandas as pd
 import io
-from converter.btech import BtechParser
+from src.converter.btech import BtechParser
 
 def test_btech_sub_audio_no_mirroring():
     # JSON content for BtechParser._parse_channel_append

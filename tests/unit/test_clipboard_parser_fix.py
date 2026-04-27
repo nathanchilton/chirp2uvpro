@@ -6,16 +6,16 @@ def test_clipboard_parser_with_json_prefix():
     parser = ClipboardParser()
     channels = parser.parse(content)
     assert len(channels) == 1
-    assert channels[0]['name'] == 'N5RCA'
-    assert channels[0]['rx_freq_hz'] == 146740000.0
-    assert channels[0]['tx_freq_hz'] == 146140000.0
-    assert channels[0]['tx_sub_audio_hz'] == 13180.0
-    assert channels[0]['scan'] is True
-    assert channels[0]['tx_power'] == '0'
+    assert channels[0].name == 'N5RCA'
+    assert channels[0].rx_freq_hz == 146740000.0
+    assert channels[0].tx_freq_hz == 146140000.0
+    assert channels[0].tx_sub_audio_hz == 13180.0
+    assert channels[0].scan is True
+    assert channels[0].tx_power == '0'
 
 def test_clipboard_parser_with_csv_prefix():
     content = 'BTECH UVname,tx_freq_hz,rx_freq_hz\nTest,146520000,146520000'
     parser = ClipboardParser()
     channels = parser.parse(content)
     assert len(channels) == 1
-    assert channels[0]['name'] == 'Test'
+    assert channels[0].name == 'Test'
