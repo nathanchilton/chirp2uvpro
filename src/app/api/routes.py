@@ -5,9 +5,12 @@ import html
 from flask import Blueprint, request, jsonify, render_template
 from converter.logic import convert_format, ConversionError
 from database import get_db_connection
+from converter.mock_repeaterbook import get_mock_repeaters
 
 api_bp = Blueprint('api', __name__)
+
 # Use absolute path or relative to app root for consistency
+
 UPLOAD_FOLDER = os.path.abspath(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'uploads'))
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
@@ -144,13 +147,26 @@ def set_location():
     lat = data.get('latitude')
     lon = data.get('longitude')
     
-    # For now, we just log it and return success. 
-    # In a real app, we might store this in the session or database.
-    print(f"Received location: Lat {lat}, Lon {lon}")
+    print(f"Received location: Lat {lat}, lon: {lon}")
     
     return jsonify({"status": "success", "message": f"Location updated: {lat}, {lon}"}), 200
 
-@api_bp.route('/history/fragment', methods=['GET'])
+@api_bp.route('/import-repeaters', methods=['POST'])
+def import_repeaters():
+    data = request.get_json()
+    if not data or 'latitude' not in data or 'longitude' not in data:
+        return jsonify({"error": "Missing latitude or longitude"}), 400
+    
+    lat = data.get('latitude')
+    lon = data.get('longitude')
+    
+    try:
+        repeaters = get_mock_repeaters(lat, lon)
+        return jsonify({"status": "success", "repeaters": repeaters}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@api_bp.route('/history/fragment')
 def history_fragment():
     conn = get_db_connection()
     cur = conn.cursor()
@@ -159,3 +175,4 @@ def history_fragment():
     conn.close()
     
     return render_template('partials/history_fragment.html', history_items=rows)
+

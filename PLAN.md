@@ -1,65 +1,54 @@
-# Plan for Universal Radio Frequency Channel Format Implementation
+# Plan: RepeaterBook Import Feature
 
 ## Overview
-The goal is to establish a robust, "universal" internal format for radio frequency channel data that can accurately represent information from various source formats (BTECH, CHINT, Clipboard). This involves analyzing existing reference files, documenting all formats, defining the new universal format, updating/writing tests, fixing existing conversion bugs, and finally refactoring the codebase for better maintainability.
+Implement a feature that allows users to automatically update their channel list with the closest repeaters using a mock RepeaterBook API. The feature will include location detection, a way to "pin" existing channels to prevent them from being overwritten, and a final output in the "clipboard format".
 
-## Phase 1: Analysis and Discovery
-**Objective:** Understand the nuances, differences, and overlaps between the existing reference formats.
+## Objectives
+- Implement a mock Repeambook API that returns 30 repeaters based on a given location.
+- Integrate browser Geolocation API to detect user location.
+- Add a "RepeaterBook Import" button to the UI.
+- Implement a channel selection interface to allow "pinning" of existing channels.
+- Implement the logic for merging pinned channels with new repeater channels (up to 30 total).
+- Ensure the final output is updated in the "clipboard format".
 
-1.1 **Examine Reference Files**
-- Read `tests/data/example_btech_format.csv`.
-- Read `tests/data/example_chirp_format.csv`.
-- Read `tests/data/example_clipboard_format.txt`.
-- Identify common channels (e.g., "N5RCA", "2MCALL") to use as anchors for comparison.
-- Note differences in:
-    - Field names.
-    - Data types (string, number, etc.).
-    - Units and precision (e.g., Hz vs. MHz).
-    - Presence/absence of specific fields (e.g., CTCSS, Offset, Power).
+## Implementation Steps
 
-## Phase 2: Documentation and Specification
-**Objective:** Create a "source of truth" for all formats to guide implementation and testing.
+### 1. Research and Setup
+- [ ] Analyze existing channel management and "clipboard format" generation logic.
+- [ ] Identify the best place to integrate the new import logic within the current application flow.
 
-2.1 **Format Documentation**
-- Create a document detailing the structure of the BTECH format.
-- Create a document detailing the structure of the CHIRP format.
-- Create a document detailing the structure of the Clipboard format.
-- Each document must specify: Field Name, Data Type, and Precision/Units.
+### 2. Mock API Development
+- [ ] Create a mock function `getMockRepeaters(location)` that:
+    - Takes latitude and longitude as input.
+    - Returns a list of 30 simulated repeater objects (name, frequency, etc.).
+    - Provides a variety of frequencies to simulate real-world scenarios.
 
-2.2 **Internal Format Specification**
-- Define the "Universal/Internal" format.
-- Document all fields required to represent the union of all information found in Phase 1.
-- Ensure the format is flexible enough to handle missing data from certain source formats (e.g., using optional fields or nulls).
+### 3. Core Feature Logic
+- [ ] Implement `detectUserLocation()` using `navigator.geolocation`.
+- [ ] Implement `handleRepeaterBookImport()`:
+    - If "Text Input" is empty:
+        - Fetch mock repeaters for current location.
+        - Update "Output Text" with these 30 channels in clipboard format.
+    - If "Text Input" is NOT empty:
+        - Parse existing channels from "Text Input".
+        - Display a list of these channels with checkboxes.
+        - Wait for user to click a "Confirm" button.
+    - Upon confirmation:
+        - Fetch mock repeaters for current location.
+        - Combine "pinned" (checked) channels with new repeaters.
+        - Maintain a maximum of 30 channels (prioritizing pinned ones, then filling the rest with new ones).
+        - Update "Output Text" with the resulting list in clipboard format.
 
-## Phase 3: Test Infrastructure Development
-**Objective:** Establish a testing baseline that matches the reference files and validates all conversion directions.
+### 4. UI/UX Implementation
+- [ ] Add "RepeaterBook Import" button.
+- [ ] Create the "Pinning Interface" (modal or inline list) with:
+    - List of current channels.
+    - Checkboxes for each channel.
+    - "Confirm" button.
+- [ ] Ensure the interface is mobile-friendly.
 
-3.1 **Update Existing Tests**
-- Review current tests and update them to ensure they reflect the content and structure of the reference files.
-- Ensure tests do not attempt to modify the reference files themselves.
-
-3/2 **Implement New Conversion Tests**
-- Write tests for:
-    - `BTECH -> Internal`
-    - `CHIRP -> Internal`
-    - `Clipboard -> Internal`
-    - `Internal -> BTECH`
-    - `Internal -> CHIRP`
-    - `Internal -> Clipboard`
-- Use the identified common channels to verify data integrity across transformations (e.g., verifying that frequency remains correct even if the unit changes from Hz to MHz).
-
-## Phase 4: Implementation and Bug Fixing
-**Objective:** Correct the existing conversion logic to align with the new specifications.
-
-4.1 **Identify and Fix Bugs**
-- Run the new test suite.
-- Identify failures where the current code produces incorrect output or fails to handle format-specific nuances.
-- Fix the code to ensure all conversion tests (from Phase 3.2) pass.
-
-## Phase 5: Refactoring and Optimization
-**Objective:** Improve code quality and maintainability now that a solid test suite is in place.
-
-5.1 **Code Refactoring**
-- Refactor the conversion logic to use the newly defined "Universal Format" as the primary engine.
-- Clean up the codebase, improving modularity and readability.
-- Ensure all tests (existing and new) pass after refactoring to prevent regressions.
+### 5. Testing and Validation
+- [ ] Unit tests for `getMockRepeaters`.
+- [ ] Unit tests for the merging logic (handling empty input, handling non-empty input, respecting the 30-channel limit, respecting pinned channels).
+- [ ] Manual end-to-end testing using a browser simulator for geolocation.
+- [ ] Verify output format matches the "clipboard format" standard.
