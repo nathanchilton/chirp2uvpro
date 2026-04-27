@@ -1,7 +1,7 @@
 import pandas as pd
 import io
 import pytest
-from converter.chirp import ChirpParser, ChirpGenerator
+from src.converter.chirp import ChirpParser, ChirpGenerator
 from converter.btech import BtechParser, BtechGenerator
 
 def test_comprehensive_roundtrip():
