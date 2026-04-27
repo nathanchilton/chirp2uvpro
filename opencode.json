@@ -51,6 +51,7 @@
     "prune": false,
     "reserved": 12000
   },
+  "plugin": ["opencode-beads"],
   "model": "llama/gemma4-26b",
   "agent": {
     "build": {

@@ -1,8 +1,8 @@
 import pandas as pd
 import io
-from converter.chirp import ChirpParser, ChirpGenerator
-from converter.btech import BtechParser, BtechGenerator
-from converter.btech import BtechGenerator
+import pytest
+from src.converter.chirp import ChirpParser, ChirpGenerator
+from src.converter.btech import BtechParser, BtechGenerator
 
 def test_comprehensive_roundtrip():
     # A comprehensive BTECH data set
@@ -11,6 +11,8 @@ Name,Frequency,Duplex,Offset,Tone,rToneFreq,Power,Scan,TalkAround,Mute,Sign,TxDi
 TestCh1,462.55,0,0,Tone,100.0,M,1,1,1,1,1,1,1
 TestCh2,462.55,0,0,None,0,H,0,0,0,0,0,0,0
 TestCh3,462.55,0,0,Tone,200.0,L,1,0,1,0,1,0,1
+TestCh4,146.74,1,0.001,Tone,600.0,M,0,0,1,0,0,0,1
+TestCh5,440.0,0,0,None,0,H,1,1,0,1,0,1,0
 """
     
     print("Starting Comprehensive Round-trip test...")
@@ -44,24 +46,20 @@ TestCh3,462.55,0,0,Tone,200.0,L,1,0,1,0,1,0,1
         final = final_channels[i]
         
         # Check all critical fields
-        assert orig['name'] == final['name']
+        assert orig.name == final.name
         # Use approx for floats
-        assert orig['tx_freq_hz'] == pytest_approx(final['tx_freq_hz'])
-        assert orig['rx_freq_hz'] == pytest_approx(final['rx_freq_hz'])
-        assert orig['tx_sub_audio_hz'] == pytest_approx(final['tx_sub_audio_hz'])
-        assert orig['rx_sub_audio_hz'] == pytest_approx(final['rx_sub_audio_hz'])
-        assert orig['tx_power'] == final['tx_power']
-        assert orig['scan'] == final['scan']
-        assert orig['talk_around'] == final['talk_around']
-        assert orig['mute'] == final['mute']
-        assert orig['sign'] == final['sign']
-        assert orig['tx_dis'] == final['tx_dis']
-        assert orig['bclo'] == final['bclo']
-        assert orig['pre_de_emph_bypass'] == final['pre_de_emph_bypass']
-
-def pytest_approx(val):
-    import pytest
-    return pytest.approx(val)
+        assert orig.tx_freq_hz == pytest.approx(final.tx_freq_hz)
+        assert orig.rx_freq_hz == pytest.approx(final.rx_freq_hz)
+        assert orig.tx_sub_audio_hz == pytest.approx(final.tx_sub_audio_hz)
+        assert orig.rx_sub_audio_hz == pytest.approx(final.rx_sub_audio_hz)
+        assert orig.tx_power == final.tx_power
+        assert orig.scan == final.scan
+        assert orig.talk_around == final.talk_around
+        assert orig.mute == final.mute
+        assert orig.sign == final.sign
+        assert orig.tx_dis == final.tx_dis
+        assert orig.bclo == final.bclo
+        assert orig.pre_de_emph_bypass == final.pre_de_emph_bypass
 
 if __name__ == "__main__":
     import pytest

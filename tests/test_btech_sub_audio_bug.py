@@ -11,11 +11,11 @@ class TestBtechParserSubAudio(unittest.TestCase):
         
         self.assertEqual(len(channels), 1)
         ch = channels[0]
-        self.assertEqual(ch['tx_freq_hz'], 462000000.0)
-        self.assertEqual(ch['rx_freq_hz'], 462000000.0)
-        self.assertEqual(ch['tx_sub_audio_hz'], 1000)
+        self.assertEqual(ch.tx_freq_hz, 462000000.0)
+        self.assertEqual(ch.rx_freq_hz, 462000000.0)
+        self.assertEqual(ch.tx_sub_audio_hz, 1000)
         # If the bug exists, this will be 0 instead of 1000
-        self.assertEqual(ch['rx_sub_audio_hz'], 1000, "rx_sub_audio_hz should sync with tx_sub_audio_hz when rf is missing")
+        self.assertEqual(ch.rx_sub_audio_hz, 1000, "rx_sub_audio_hz should sync with tx_sub_audio_hz when rf is missing")
 
 if __name__ == "__main__":
     unittest.main()

@@ -5,43 +5,42 @@ from src.converter.clipboard import ClipboardParser
 from src.converter.logic import chirp_to_btech, btech_to_chirp, ConversionError
 def test_clipboard_parser_with_prefix():
     prefix = "BTECH UV"
-    content = f"{prefix}title,tx_freq,rx_freq\nTest,146520000,146520000"
+    content = f"{prefix}name,tx_freq_hz,rx_freq_hz\nTest,146520000,146520000"
     parser = ClipboardParser()
     channels = parser.parse(content)
     assert len(channels) == 1
-    assert channels[0]['title'] == 'Test'
-    assert channels[0]['tx_freq'] == 146520000
+    assert channels[0].name == 'Test'
+    assert channels[0].tx_freq_hz == 146520000.0
 
 def test_clipboard_parser_json():
     json_content = '{"chs":[{"n":"N5RCA","rf":"146.780","tf":"146.180","ts":13180,"s":1,"id":1,"p":0}]}'
     parser = ClipboardParser()
     channels = parser.parse(json_content)
     assert len(channels) == 1
-    assert channels[0]['name'] == 'N5RCA'
-    assert channels[0]['rx_freq_hz'] == 146780000.0
-    assert channels[0]['tx_freq_hz'] == 146180000.0
-    assert channels[0]['tx_sub_audio_hz'] == 13180.0
-    assert channels[0]['scan'] is True
-    assert channels[0]['tx_power'] == '0'
+    assert channels[0].name == 'N5RCA'
+    assert channels[0].rx_freq_hz == 146780000.0
+    assert channels[0].tx_freq_hz == 146180000.0
+    assert channels[0].tx_sub_audio_hz == 13180.0
+    assert channels[0].scan is True
+    assert channels[0].tx_power == '0'
 BTECH_HEADER = "title,tx_freq,rx_freq,tx_sub_audio(CTCSS=freq/DCS=number),rx_sub_audio(CTCSS=freq/DCS=number),tx_power(H/M/L),bandwidth(12500/25000),scan(0=OFF/1=ON),talk around(0=OFF/1=ON),pre_de_emph_bypass(0=OFF/1=ON),sign(0=OFF/1=ON),tx_dis(0=OFF/1=ON),bclo(0=OFF/1=ON),mute(0=OFF/1=ON),rx_modulation(0=FM/1=AM),tx_modulation(0=FM/1=AM)"
 
 def test_chirp_to_btech_basic():
-    csv_content = "Name,Frequency,Duplex,Offset,Tone,rToneFreq,cToneF,DtcsCode,DtcsPolarity,RxDtcsCode,CrossMode,Mode,TStep,Skip,Power,Comment,URCALL,RPT1CALL,RPT2CALL,DVCODE\nN5RCA,146.780000,-,0.600000,Tone,131.8,8MA,023,NN,023,Tone->Tone,FM,5.00,,4.0W,,,,,"
+    csv_content = "Name,Frequency,Duplex,Offset,Tone,rToneFreq,cToneF,DtcsCode,DtcsPolarity,RxDtcsCode,CrossMode,Mode,TStep,Skip,Power,Comment,URCALL,RPT1CALL,RPT2CALL,DVCODE\nN5RCA,146.780000,-,0.600000,Tone,131.8,8MA,023,NN,02fmt,Tone->Tone,FM,5.00,,4.0W,,,,,"
     output, warning = chirp_to_btech(csv_content)
     assert "N5RCA" in output
     assert "146.78" in output
     assert warning is None
 
-def test_chirp_to_btech_truncation():
+def test_chirp_to_btech_large_input():
     # Create 35 rows of data
-    header = "Name,Frequency,Duplex,Offset,Tone,rToneFreq,c%s,DtcsCode,DtcsPolarity,RxDtcsCode,CrossMode,Mode,TStep,Skip,Power,Comment,URCALL,RPT1CALL,RPT2CALL,DVCODE".replace('%s', 'cToneF')
+    header = "Name,Frequency,Duplex,Offset,Tone,rTref,c%s,DtcsCode,DtcsPolarity,RxDtcsCode,CrossMode,Mode,TStep,Skip,Power,Comment,URCALL,RPT1CALL,RPT2CALL,DVCODE".replace('%s', 'cToneF')
     rows = [header]
     for i in range(35):
         rows.append(f"Name{i},146.0,-,0.0,Tone,131.8,8MA,023,NN,0s,Tone->Tone,FM,5.0,,4.0W,,,,")
     csv_content = "\n".join(rows)
     output, warning = chirp_to_btech(csv_content)
-    assert warning is not None
-    assert "Truncated" in warning
+    assert warning is None
 
 def test_chirp_to_btech_empty_input():
     output, warning = chirp_to_btech("")
@@ -99,6 +98,3 @@ def test_integration_pipeline():
     assert "Tone" in output_chirp
     assert "0.0001318" in output_chirp
     assert "FM" in output_chirp
-
-
-

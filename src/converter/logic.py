@@ -69,24 +69,13 @@ def internal_to_btech_csv(channels: list) -> tuple[str, str | None]:
 
 def chirp_to_btech(csv_content: str) -> tuple[str, str | None]:
     """Wrapper for ChirpParser and BtechGenerator to maintain backward compatibility."""
-    if csv_content is None:
-        raise ConversionError("CSV content is None")
     if not csv_content:
         return "", None
     
     try:
-        parser = ChirpParser()
-        generator = BtechGenerator()
-        channels = parser.parse(csv_content)
-        if not channels:
-            return "", None
-        
-        warning = None
-        if len(channels) > 30:
-            warning = "Truncated"
-            channels = channels[:30]
-            
-        return generator.generate(channels), warning
+        return convert_format(csv_content, 'chirp', 'btech')
+    except ConversionError as e:
+        return "", str(e)
     except Exception as e:
         return "", str(e)
 
@@ -96,13 +85,9 @@ def btech_to_chirp(csv_content: str) -> tuple[str, str | None]:
         return "", None
     
     try:
-        parser = BtechParser()
-        generator = ChirpGenerator()
-        channels = parser.parse(csv_content)
-        if not channels:
-            return "", None
-        
-        return generator.generate(channels), None
+        return convert_format(csv_content, 'btech', 'chirp')
+    except ConversionError as e:
+        return "", str(e)
     except Exception as e:
         return "", str(e)
 

@@ -1,0 +1,7 @@
+{
+  "database": "dolt",
+  "backend": "dolt",
+  "dolt_mode": "embedded",
+  "dolt_database": "chirp2uvpro",
+  "project_id": "a923681f-88a6-49e7-9e9e-b7cc60f443bf"
+}

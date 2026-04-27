@@ -59,3 +59,7 @@ tests/e2E/tmp/
 pytest_output.txt
 TODO.md
 
+
+# Beads / Dolt files (added by bd init)
+.dolt/
+.beads-credential-key
