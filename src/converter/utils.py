@@ -34,17 +34,26 @@ def format_freq_to_hz(freq_val):
         return 0
 
 def format_sub_audio_to_hz(sub_audio_val):
-    """Converts sub-audio frequency to Hz. Assumes MHz if < 0.01, kHz if < 3.0, else Hz."""
+    """Converts sub-audio frequency to Hz. Assumes kHz if < 3.0, else Hz."""
     try:
         if pd.isna(sub_audio_val):
             return 0.0
         f = float(sub_audio_val)
-        if f < 0.01: # Assumes MHz (e.g. 0.0001318 MHz -> 131.8 Hz)
-            return f * 1_000_000
-        elif f < 3.0: # Assumes kHz (e.g. 0.1318 kHz -> 131.8 Hz)
-            return f * 1000
-        else: # Assumes Hz (e.g. 131.8 Hz -> 131.8 Hz)
+        if f < 3.0: # Assumes kHz
+            f = f * 1000
+        
+        # Now f is in Hz.
+        # Valid if:
+        # 1. It's an integer (DCS code)
+        # 2. It's in the CTCSS range (e.g., 60-300 Hz)
+        
+        is_ctcss = 60 <= f <= 300
+        is_dcs = f.is_integer()
+        
+        if is_ctcss or is_dcs:
             return f
+        else:
+            return 0.0
     except (ValueError, TypeError):
         return 0.0
 
