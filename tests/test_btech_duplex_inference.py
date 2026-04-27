@@ -14,8 +14,8 @@ def test_btech_duplex_inference_plus():
     channels = parser.parse(csv_content)
     
     assert len(channels) == 1
-    assert channels[0]['duplex'] == '+'
-    assert channels[0]['rx_freq_hz'] == 463150000.0
+    assert channels[0].duplex == '+'
+    assert channels[0].rx_freq_hz == 463150000.0
 
 def test_btech_duplex_inference_minus():
     # CSV with NaN duplex and an or offset that should result in '-'
@@ -26,8 +26,8 @@ def test_btech_duplex_inference_minus():
     channels = parser.parse(csv_content)
     
     assert len(channels) == 1
-    assert channels[0]['duplex'] == '-'
-    assert channels[0]['rx_freq_hz'] == 461950000.0
+    assert channels[0].duplex == '-'
+    assert channels[0].rx_freq_hz == 461950000.0
 
 def test_btech_duplex_inference_none():
     # CSV with NaN duplex and no difference between rx and tx
@@ -38,8 +38,8 @@ def test_btech_duplex_inference_none():
     channels = parser.parse(csv_content)
     
     assert len(channels) == 1
-    assert channels[0]['duplex'] == 'none'
-    assert channels[0]['rx_freq_hz'] == 462550000.0
+    assert channels[0].duplex == 'none'
+    assert channels[0].rx_freq_hz == 462550000.0
 
 def test_btech_duplex_explicit_plus():
     # CSV with explicit '+' duplex
@@ -50,8 +50,8 @@ def test_btech_duplex_explicit_plus():
     channels = parser.parse(csv_content)
     
     assert len(channels) == 1
-    assert channels[0]['duplex'] == '+'
-    assert channels[0]['rx_freq_hz'] == 463150000.0
+    assert channels[0].duplex == '+'
+    assert channels[0].rx_freq_hz == 463150000.0
 
 def test_btech_duplex_explicit_minus():
     # CSV with explicit '-' duplex
@@ -62,5 +62,5 @@ def test_btech_duplex_explicit_minus():
     channels = parser.parse(csv_content)
     
     assert len(channels) == 1
-    assert channels[0]['duplex'] == '-'
-    assert channels[0]['rx_freq_hz'] == 461950000.0
+    assert channels[0].duplex == '-'
+    assert channels[0].rx_freq_hz == 461950000.0

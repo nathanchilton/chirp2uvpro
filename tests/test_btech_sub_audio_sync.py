@@ -12,11 +12,11 @@ class TestBtechParserSubAudioCSV(unittest.TestCase):
         
         self.assertEqual(len(channels), 1)
         ch = channels[0]
-        self.assertEqual(ch['tx_freq_hz'], 462000000.0)
-        self.assertEqual(ch['rx_freq_hz'], 462000000.0)
-        self.assertEqual(ch['tx_sub_audio_hz'], 1000.0)
+        self.assertEqual(ch.tx_freq_hz, 462000000.0)
+        self.assertEqual(ch.rx_freq_hz, 462000000.0)
+        self.assertEqual(ch.tx_sub_audio_hz, 1000.0)
         # Ensure rx_sub_audio_hz is also synced when rf is 0
-        self.assertEqual(ch['rx_sub_audio_hz'], 1000.0, "rx_sub_audio_hz should sync with tx_sub_audio_hz when rf is 0 in CSV")
+        self.assertEqual(ch.rx_sub_audio_hz, 1000.0, "rx_sub_audio_hz should sync with tx_sub_audio_hz when rf is 0 in CSV")
 
 if __name__ == "__main__":
     unittest.main()
