@@ -31,7 +31,25 @@ function parseClipboardFormat(text) {
         const jsonStart = trimmed.search(/[\[\{]/);
         if (jsonStart !== -1) {
             const jsonStr = trimmed.substring(jsonStart);
-            const parsed = JSON.parse(jsonStr);
+            // We need to find the end of the JSON structure. 
+            // Since JSON can contain nested braces, a simple regex might not be enough if there's trailing text.
+            // But for this specific use case, we can try to find the last matching brace.
+            let jsonEnd = -1;
+            let braceCount = 0;
+            for (let i = 0; i < jsonStr.length; i++) {
+                if (jsonStr[i] === '{' || jsonStr[i] === '[') {
+                    braceCount++;
+                } else if (jsonStr[i] === '}' || jsonStr[i] === ']') {
+                    braceCount--;
+                    if (braceCount === 0) {
+                        jsonEnd = i;
+                        break;
+                    }
+                }
+            }
+
+            const finalJsonStr = jsonEnd !== -1 ? jsonStr.substring(0, jsonEnd + 1) : jsonStr;
+            const parsed = JSON.parse(finalJsonStr);
 
             // Extract the array of channels
             let channelsArray = [];
