@@ -81,7 +81,20 @@ Once started, the application is accessible at `http://localhost:5000` on your l
 2.  **Configure Formats:** Select the input format (or Auto-detect) and the desired output format.
 3.  **Convert:** Initiate the conversion process.
 4.  **View Results:** Download the converted file or copy the result from the text area.
-5.  **History:** Review the SQLite database for a record of past conversions.
+5.  **History:** Review the SQLite database for a    record of past conversions.
+
+### 🛰️ RepeaterBook Import Workflow
+
+You can automatically populate your channel list with nearby repeaters:
+
+1.  **Load Initial Channels:** Start by uploading a CSV or pasting existing channels into the "Text Input" or "Upload" tabs.
+2.  **Trigger Import:** Click the **"Import Repeaters"** button. The app will request your location via the browser's Geolocation API.
+3.  **Select Channels to Keep (Pinning):**
+    *   If you have existing channels, a selection interface will appear.
+    *   By default, all current channels are "pinned" (checked).
+    *   **Uncheck** any channels you do *not* want to keep in your new list.
+4.  **Apply:** Click **"Apply Import"**. The app will merge your pinned channels with the newly discovered repeaters, respecting the 30-channel limit of the BTECH UV-Pro.
+5.  **Result:** The updated list will be automatically generated in the "Result" text area in Clipboard format.
 
 For details on the required CSV formats, please refer to the official guide: [https://baofengtech.com/your-complete-channel-import-guide-for-gmrs-pro-uv-pro/](https://baofengtech.com/your-complete-channel-import-guide-for-gmrs-pro-uv-pro/)
 
