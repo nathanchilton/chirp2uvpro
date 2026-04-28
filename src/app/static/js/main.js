@@ -148,6 +148,29 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // 4. Handle "Result:" label click to copy to clipboard
+    document.addEventListener('click', (event) => {
+        const label = event.target.closest('label.form-label');
+        if (label && label.textContent.trim() === 'Result:') {
+            const container = label.parentElement;
+            const textarea = container.querySelector('textarea');
+            if (textarea && textarea.value) {
+                navigator.clipboard.writeText(textarea.value).then(() => {
+                    const originalText = label.textContent;
+                    label.textContent = 'Result: (Copied!)';
+                    label.classList.add('text-success');
+                    setTimeout(() => {
+                        label.textContent = originalText;
+                        label.classList.remove('text-success');
+                    }, 2000);
+                }).catch(err => {
+                    console.error('Failed to copy text: ', err);
+                });
+            }
+        }
+    });
+
+
     // --- Core Logic Functions ---
 
     async function handleImportRepeaters(importBtn) {
