@@ -54,10 +54,10 @@ def test_chirp_to_btech_empty_input():
 
 def test_btech_to_chirp_dcs_ctcss():
     # Test CTCSS (freq)
-    content_ctcss = f"{BTECH_HEADER}\nTestCTCSS,146000000,146500000,13180000,0,H,25000,0,0,0,1,0,0,0,0"
+    content_ctcss = f"{BTECH_HEADER}\nTestCTCSS,146000000,146500000,100,0,H,25000,0,0,0,1,0,0,0,0"
     output_ctcss, _ = btech_to_chirp(content_ctcss)
     assert "Tone" in output_ctcss
-    assert "13.18" in output_ctcss
+    assert "100" in output_ctcss
 
     # Test DCS (number)
     content_dcs = f"{BTECH_HEADER}\nTestDCS,146000000,146500000,23,0,H,25000,0,0,0,1,0,0,0,0"

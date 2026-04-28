@@ -71,9 +71,11 @@ class ClipboardParser(BaseParser):
 
         # If not JSON, try CSV
         try:
-            prefix_indicators = ['Copy this text and start BTECH UV', 'Copy to BWE/BTECH JSON'] # wait, let me check the original again.
-            # 92: prefix_indicators = ['Copy this text and start BTECH UV', 'Copy this text and start BWE/BTECH JSON']
-            prefix_indicators = ['Copy this text and start BTECH UV', 'Copy this text and start BWE/BTECH JSON']
+            prefix_indicators = [
+                'Copy this text and start BTECH UV',
+                'Copy this text and start BWE/BTECH JSON',
+                'BTECH UV'
+            ]
             for prefix in prefix_indicators:
                 if content.startswith(prefix):
                     content = content[len(prefix):]

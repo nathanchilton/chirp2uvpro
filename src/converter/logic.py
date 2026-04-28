@@ -98,7 +98,23 @@ def internal_to_clipboard(channels: list) -> tuple[str, str | None]:
 
     try:
         generator = ClipboardGenerator()
-        return generator.generate(channels), None
+        # Ensure channels are converted to Channel objects if they are dicts
+        from .models import Channel
+        processed_channels = []
+        for ch in channels:
+            if isinstance(ch, dict):
+                new_ch = Channel()
+                new_ch.name = ch.get('name', ch.get('n', ''))
+                new_ch.tx_freq_hz = ch.get('tx_freq_hz', ch.get('tf', 0))
+                new_ch.rx_freq_hz = ch.get('rx_freq_hz', ch.get('rf', 0))
+                new_ch.tx_sub_audio_hz = ch.get('tx_sub_audio_hz', ch.get('ts', 0))
+                new_ch.rx_sub_audio_hz = ch.get('rx_sub_audio_hz', ch.get('rs', 0))
+                new_ch.scan = ch.get('scan', False)
+                new_ch.tx_power = ch.get('tx_power', 'M')
+                processed_channels.append(new_ch)
+            else:
+                processed_channels.append(ch)
+        return generator.generate(processed_channels), None
     except Exception as e:
         return "", str(e)
 

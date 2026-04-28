@@ -19,41 +19,33 @@ def format_number_to_str(val):
         return str(val)
 
 def format_freq_to_hz(freq_val):
-    """Converts frequency to Hz. If value < 3000, assumes MHz. If < 3000000, assumes kHz. Otherwise assumes Hz."""
+    """Converts frequency to Hz. If value < 1000, assumes MHz. Otherwise assumes Hz."""
     try:
         if pd.isna(freq_val):
-            return 0
+            return 0.0
         f = float(freq_val)
-        if f < 3000: # Assumes MHz
+        if f == 0:
+            return 0.0
+        if f < 1000: # Assumes MHz
             return round(f * 1_000_000, 3)
-        elif f < 3000000: # Assumes kHz
-            return round(f * 1000, 3)
         else: # Assumes Hz
             return round(f, 3)
     except (ValueError, TypeError):
-        return 0
+        return 0.0
 
 def format_sub_audio_to_hz(sub_audio_val):
-    """Converts sub-audio frequency to Hz. Assumes kHz if < 3.0, else Hz."""
+    """Converts sub-audio frequency to Hz. If value < 1000, assumes MHz. Otherwise assumes Hz."""
     try:
         if pd.isna(sub_audio_val):
             return 0.0
+        f = float(subrad_val if 'subrad_val' in locals() else sub_audio_val) # placeholder for safety, actually just use sub_audio_val
         f = float(sub_audio_val)
-        if f < 3.0: # Assumes kHz
-            f = f * 1000
-        
-        # Now f is in Hz.
-        # Valid if:
-        # 1. It's an integer (DCS code)
-        # 2. It's in the CTCSS range (e.g., 60-300 Hz)
-        
-        is_ctcss = 60 <= f <= 300
-        is_dcs = f.is_integer()
-        
-        if is_ctcss or is_dcs:
-            return f
-        else:
+        if f == 0:
             return 0.0
+        if f < 1000: # Assumes MHz
+            return round(f * 1_000_000, 3)
+        else: # Assumes Hz
+            return round(f, 3)
     except (ValueError, TypeError):
         return 0.0
 
