@@ -3,27 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let pendingText = null;
 
-    // --- Helpers ---
-
-    function parseClipboardFormat(text) {
-        try {
-            const lines = text.trim().split('\n');
-            if (lines.length < 3 || lines[0] !== 'Copy this text and start BTECH UV' || lines[1] !== 'chs') {
-                return [];
-            }
-            const jsonStr = lines.slice(2).join('\n');
-            return JSON.parse(jsonStr);
-        } catch (e) {
-            console.error("Error parsing clipboard format:", e);
-            return [];
-        }
-    }
-
-    function formatClipboard(channels) {
-        const header = 'Copy this text and start BTECH UV\nchs';
-        const jsonStr = JSON.stringify(channels, null, 0);
-        return `${header}\n${jsonStr}`;
-    }
+    // --- Helpers (Loaded from logic.js) ---
 
     // --- Event Listeners ---
 
