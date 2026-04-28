@@ -21,6 +21,12 @@ def test_import_repeaters_success(client):
     repeater = data['repeaters'][0]
     assert 'n' in repeater
     assert 'rf' in repeater
+    assert 'tf' in repeater
+    assert 'ts' in repeater
+    assert 'rs' in repeater
+    # Verify sub-audio is within a valid CTCSS range (67.0 - 250.0 Hz)
+    assert 67.0 <= repeater['ts'] <= 250.0
+    assert 67.0 <= repeater['rs'] <= 250.0
 
 def test_import_repeaters_missing_data(client):
     payload = {'latitude': 45.0}
