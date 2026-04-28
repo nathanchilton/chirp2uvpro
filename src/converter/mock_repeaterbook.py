@@ -18,7 +18,10 @@ def get_mock_repeaters(lat, lon):
         
         repeaters.append({
             "n": name,
-            "rf": frequency
+            "rf": frequency,
+            "tf": frequency,
+            "ts": 0.1,
+            "rs": 0.1
         })
     
     return repeaters
