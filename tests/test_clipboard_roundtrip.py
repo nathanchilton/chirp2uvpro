@@ -74,7 +74,8 @@ def test_clipboard_roundtrip_csv_subaudio():
     assert len(channels) == 1
     assert channels[0].name == 'TestCh'
     assert channels[0].tx_freq_hz == 146520000.0
-    assert channels[0].rx_sub_audio_hz == 131800.0
+    assert channels[0].tx_sub_audio_hz == 131.8
+    assert channels[0].rx_sub_audio_hz == 131.8
     
     # 2. Generate CHIRP-style JSON from the parsed channels
     generated_content = generator.generate(channels)
@@ -86,7 +87,8 @@ def test_clipboard_roundtrip_csv_subaudio():
     assert len(channels_back) == 1
     assert channels_back[0].name == 'TestCh'
     assert channels_back[0].tx_freq_hz == 146520000.0
-    assert channels_back[0].rx_sub_audio_hz == 131800.0
+    assert channels_back[0].tx_sub_audio_hz == 131.8
+    assert channels_back[0].rx_sub_audio_hz == 131.8
 
 if __name__ == "__main__":
     import pytest
