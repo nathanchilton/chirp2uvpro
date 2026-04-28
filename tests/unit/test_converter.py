@@ -96,5 +96,5 @@ def test_integration_pipeline():
     assert "-" in output_chirp
     assert "0.6" in output_chirp
     assert "Tone" in output_chirp
-    assert "0.0001318" in output_chirp
+    assert "131.8" in output_chirp
     assert "FM" in output_chirp

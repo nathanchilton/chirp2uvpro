@@ -34,18 +34,16 @@ def format_freq_to_hz(freq_val):
         return 0.0
 
 def format_sub_audio_to_hz(sub_audio_val):
-    """Converts sub-audio frequency to Hz. If value < 1000, assumes MHz. Otherwise assumes Hz."""
+    """Converts sub-audio frequency to Hz. If value < 1, assumes kHz."""
     try:
         if pd.isna(sub_audio_val):
             return 0.0
-        f = float(subrad_val if 'subrad_val' in locals() else sub_audio_val) # placeholder for safety, actually just use sub_audio_val
         f = float(sub_audio_val)
         if f == 0:
             return 0.0
-        if f < 1000: # Assumes MHz
-            return round(f * 1_000_000, 3)
-        else: # Assumes Hz
-            return round(f, 3)
+        if f < 1.0: # Assumes kHz
+            return round(f * 1000, 3)
+        return round(f, 3)
     except (ValueError, TypeError):
         return 0.0
 

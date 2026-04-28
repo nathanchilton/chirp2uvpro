@@ -26,8 +26,8 @@ def test_sub_audio():
     assert hz == 23
     assert mhz == 0.000023
 
-    # Test 4: Input is an invalid value (e.g., 13.8)
-    val_invalid = 13.8
+    # Test 4: Input is an invalid value (e.g., "abc")
+    val_invalid = "abc"
     hz = format_sub_audio_to_hz(val_invalid)
     mhz = format_sub_audio_to_mhz(hz)
     print(f"Input: {val_invalid} -> Hz: {hz}, MHz: {mhz}")
