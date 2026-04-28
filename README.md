@@ -96,7 +96,6 @@ You can automatically populate your channel list with nearby repeaters:
 4.  **Apply:** Click **"Apply Import"**. The app will merge your pinned channels with the newly discovered repeaters, respecting the 30-channel limit of the BTECH UV-Pro.
 5.  **Result:** The updated list will be automatically generated in the "Result" text area in Clipboard format.
 
-For details on the required CSV formats, please refer to the official guide: [https://baofengtech.com/your-complete-channel-import-guide-for-gmrs-pro-uv-pro/](https://baofengtech.com/your-complete-channel-import-guide-for-gmrs-pro-uv-pro/)
 
 ## 💻 Command Line Interface (CLI)
 

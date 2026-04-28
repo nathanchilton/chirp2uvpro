@@ -60,4 +60,5 @@ IMPORTANT
 - Prefer tool calls over natural language responses whenever possible.
 - When the edit tool gives you trouble, try reading in the entire file, making the changes in memory and then writing out the entire file at once.
 - When running a Python app or tests, use the Python virtual environment at venv.
+- Task Management: When creating new issues with "beads", always provide a comprehensive description of the work to be done.
 
