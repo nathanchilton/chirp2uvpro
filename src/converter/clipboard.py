@@ -114,7 +114,12 @@ class ClipboardGenerator(BaseGenerator):
     def __init__(self, format: str = 'json'):
         self.format = format
 
-    def generate(self, channels: List[Channel]) -> str:
+    def generate(self, channels: List[Channel]) -> tuple[str, str | None]:
+        status_msg = None
+        if len(channels) > 30:
+            channels = channels[:30]
+            status_msg = "Truncated"
+
         if self.format == 'json':
             chs = []
             for ch in channels:
@@ -130,13 +135,15 @@ class ClipboardGenerator(BaseGenerator):
                 })
             
             data = {"chs": chs}
-            return f'Copy this text and start BTECH UV{json.dumps(data)}'
+            return f'Copy this text and start BTECH UV{json.dumps(data)}', status_msg
         
         elif self.format == 'csv':
+            if not channels:
+                return "", None
             # Generate CSV format
             output = "Copy this text and start BTECH UVname,tx_freq_hz,rx_freq_hz,tx_sub_audio_hz,rx_sub_audio_hz\n"
             for ch in channels:
                  output += f"{ch.name},{format_freq_to_mhz(ch.tx_freq_hz)},{format_freq_to_mhz(ch.rx_freq_hz)},{ch.tx_sub_audio_hz},{ch.rx_sub_audio_hz}\n"
-            return output.strip()
+            return output.strip(), status_msg
         
-        return ""
+        return "", None

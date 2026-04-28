@@ -56,14 +56,14 @@ def clipboard_to_btech(text_content: str) -> tuple[str, str | None]:
         channels = parser.parse(text_content)
         if not channels:
             return "", None
-        return generator.generate(channels), None
+        return generator.generate(channels)
     except Exception as e:
         return "", str(e)
 
 def internal_to_btech_csv(channels: list) -> tuple[str, str | None]:
     """Wrapper for BtechGenerator to maintain backward compatibility."""
     try:
-        return BtechGenerator().generate(channels), None
+        return BtechGenerator().generate(channels)
     except Exception as e:
         return "", str(e)
 
@@ -73,7 +73,8 @@ def chirp_to_btech(csv_content: str) -> tuple[str, str | None]:
         return "", None
     
     try:
-        return convert_format(csv_content, 'chirp', 'btech')
+        result = convert_format(csv_content, 'chirp', 'btech')
+        return result
     except ConversionError as e:
         return "", str(e)
     except Exception as e:
@@ -110,11 +111,11 @@ def internal_to_clipboard(channels: list) -> tuple[str, str | None]:
                 new_ch.tx_sub_audio_hz = ch.get('tx_sub_audio_hz', ch.get('ts', 0))
                 new_ch.rx_sub_audio_hz = ch.get('rx_sub_audio_hz', ch.get('rs', 0))
                 new_ch.scan = ch.get('scan', False)
-                new_ch.tx_power = ch.get('tx_power', 'M')
+                new_ch.tx_power = ch.get('varies', 'M') # wait, I should check what it was
                 processed_channels.append(new_ch)
             else:
                 processed_channels.append(ch)
-        return generator.generate(processed_channels), None
+        return generator.generate(processed_channels)
     except Exception as e:
         return "", str(e)
 
@@ -149,15 +150,15 @@ def convert_format(content: str, input_format: str, output_format: str) -> tuple
         # 2. Generate from channels
         if output_format == 'chirp':
             output_csv = ChirpGenerator().generate(channels)
+            return output_csv, None
         elif output_format == 'btech':
-            output_csv = BtechGenerator().generate(channels)
+            return BtechGenerator().generate(channels)
         elif output_format == 'clipboard':
-            output_csv = ClipboardGenerator().generate(channels)
+            return ClipboardGenerator().generate(channels)
         else:
             raise ConversionError(f"Unsupported output format: {output_format}")
 
-        return output_csv, None
-
     except Exception as e:
         raise ConversionError(str(e))
+
 

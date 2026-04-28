@@ -1,9 +1,12 @@
 import pandas as pd
 import io
+import os
 from src.converter.logic import chirp_to_btech
 
 def test_truncation():
-    csv_path = '../../tests/data/Yaesu_VX-6_20240203-Jacksonville.csv'
+    # Get the absolute path to the test data file
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    csv_path = os.path.join(base_dir, '../../tests/data/Yaesu_VX-6_20240203-Jacksonville.csv')
     print(f"Testing with {csv_path}")
     
     try:
@@ -18,11 +21,12 @@ def test_truncation():
     if not output_csv:
         print("FAILURE: Conversion produced empty content")
         return
-
+    
     print(f"Status Message: {status_msg}")
     
     # Check number of lines in output. 
     # The header is 1 line, then 30 rows of channels.
+    # Since output_csv is now a string (the first element of the tuple), we can strip it.
     lines = output_csv.strip().split('\n')
     num_channels = len(lines) - 1
     print(f"Number of channels in output: {num_channels}")

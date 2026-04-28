@@ -20,8 +20,9 @@ class BaseGenerator(ABC):
     Converts a list of Channel objects to a specific output format (string).
     """
     @abstractmethod
-    def generate(self, channels: List[Channel]) -> str:
+    def generate(self, channels: List[Channel]) -> tuple[str, str | None]:
         """
         Generates the output string from the list of Channel objects.
+        Returns a tuple of (output_content, status_message).
         """
         pass

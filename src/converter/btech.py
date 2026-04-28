@@ -15,7 +15,6 @@ from .utils import (
 
 class BtechParser(BaseParser):
     def parse(self, content: str) -> List[Channel]:
-        print(f"DEBUG: content repr: {repr(content)}")
         if not content:
             return []
 
@@ -207,11 +206,14 @@ def fmt_err(e):
     return str(e)
 
 class BtechGenerator(BaseGenerator):
-    def generate(self, channels: List[Channel]) -> str:
+    def generate(self, channels: List[Channel]) -> tuple[str, str | None]:
         if not channels:
-            return ""
+            return "", None
 
-        channels = channels[:30]
+        status_msg = None
+        if len(channels) > 30:
+            channels = channels[:30]
+            status_msg = "Truncated"
 
         header = "title,tx_freq,rx_freq,duplex,offset,tx_sub_audio,rx_sub_audio,tx_power,bandwidth,scan,talk_around,pre_de_emph_bypass,sign,tx_dis,bclo,mute,rx_modulation,tx_modulation,location,skip"
         output = io.StringIO()
@@ -242,4 +244,4 @@ class BtechGenerator(BaseGenerator):
             ]
             output.write(",".join(map(str, row)) + "\n")
 
-        return output.getvalue().strip()
+        return output.getvalue().strip(), status_msg
