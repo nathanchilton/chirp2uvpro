@@ -13,7 +13,9 @@ from .utils import (
 )
 
 class ChirpParser(BaseParser):
-    def parse(self, content: str) -> List[Channel]:
+    def parse(self, content: str | tuple[str, str | None]) -> List[Channel]:
+        if isinstance(content, tuple):
+            content = content[0]
         if not content:
             return []
         
@@ -109,9 +111,9 @@ class ChirpParser(BaseParser):
             return []
 
 class ChirpGenerator(BaseGenerator):
-    def generate(self, channels: List[Channel]) -> str:
+    def generate(self, channels: List[Channel]) -> tuple[str, str | None]:
         if not channels:
-            return ""
+            return "", None
             
         rows = []
         for ch in channels:
@@ -199,5 +201,5 @@ class ChirpGenerator(BaseGenerator):
                 
         output_df['Frequency'] = output_df['Frequency'].apply(format_freq_for_chirp)
         
-        return output_df.to_csv(index=False)
+        return output_df.to_csv(index=False), None
 

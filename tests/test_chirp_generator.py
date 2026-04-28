@@ -44,7 +44,7 @@ def test_chirp_generator_flags():
         )
     ]
     
-    csv_content = generator.generate(channels)
+    csv_content, _ = generator.generate(channels)
     df = pd.read_csv(io.StringIO(csv_content))
     
     # Check Channel 1

@@ -149,8 +149,7 @@ def convert_format(content: str, input_format: str, output_format: str) -> tuple
         
         # 2. Generate from channels
         if output_format == 'chirp':
-            output_csv = ChirpGenerator().generate(channels)
-            return output_csv, None
+            return ChirpGenerator().generate(channels)
         elif output_format == 'btech':
             return BtechGenerator().generate(channels)
         elif output_format == 'clipboard':

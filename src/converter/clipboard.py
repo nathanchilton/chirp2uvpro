@@ -16,7 +16,9 @@ class ClipboardParser(BaseParser):
     """
     Parser for Clipboard content (JSON or CSV).
     """
-    def parse(self, content: str) -> List[Channel]:
+    def parse(self, content: str | tuple[str, str | None]) -> List[Channel]:
+        if isinstance(content, tuple):
+            content = content[0]
         if not content or not content.strip():
             return []
         

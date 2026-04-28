@@ -18,7 +18,7 @@ def test_chirp_roundtrip_with_example_file():
     with open(original_file, 'r') as f:
         chirp_content = f.read()
     
-    btech_content = btech_gen.generate(chirp_parser.parse(chirp_content))
+    btech_content, _ = btech_gen.generate(chirp_parser.parse(chirp_content))
     with open(btech_output, 'w') as f:
         f.write(btech_content)
     
@@ -29,7 +29,7 @@ def test_chirp_roundtrip_with_example_file():
     with open(btech_output, 'r') as f:
         btech_content_read = f.read()
         
-    chirp_back_content = chirp_gen.generate(btech_parser.parse(btech_content_read))
+    chirp_back_content, _ = chirp_gen.generate(btech_parser.parse(btech_content_read))
     with open(chirp_back_output, 'w') as f:
         f.write(chirp_back_content)
     

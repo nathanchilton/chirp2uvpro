@@ -37,7 +37,7 @@ def test_mock_api_to_clipboard_format_validity():
     
     # 3. Generate clipboard format (JSON)
     generator = ClipboardGenerator(format='json')
-    generated_text = generator.generate(channels)
+    generated_text, _ = generator.generate(channels)
     
     # 4. Verify Prefix
     prefix = "Copy this text and start BTECH UV"

@@ -14,7 +14,9 @@ from .utils import (
 )
 
 class BtechParser(BaseParser):
-    def parse(self, content: str) -> List[Channel]:
+    def parse(self, content: str | tuple[str, str | None]) -> List[Channel]:
+        if isinstance(content, tuple):
+            content = content[0]
         if not content:
             return []
 
