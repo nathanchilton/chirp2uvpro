@@ -13,6 +13,10 @@ def get_mock_repeaters(lat, lon):
     for i in range(30):
         # Generate a plausible frequency (e.g., between 144.0 and 148.0 MHz)
         frequency = round(random.uniform(144.0, 148.0), 4)
+        
+        # Generate a plausible sub-audio (CTCSS) frequency (e.g., between 67.0 and 250.0 Hz)
+        sub_audio = round(random.uniform(67.0, 250.0), 1)
+        
         # Generate a name
         name = f"Repeater {i+1} ({lat:.2f}, {lon:.2f})"
         
@@ -20,8 +24,8 @@ def get_mock_repeaters(lat, lon):
             "n": name,
             "rf": frequency,
             "tf": frequency,
-            "ts": 0.1,
-            "rs": 0.1
+            "ts": sub_audio,
+            "rs": sub_audio
         })
     
     return repeaters
