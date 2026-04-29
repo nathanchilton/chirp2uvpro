@@ -50,5 +50,6 @@ Implement a feature that allows users to automatically update their channel list
 ### 5. Testing and Validation
 - [x] Unit tests for `getMockRepeaters`.
 - [x] Unit tests for the merging logic (handling empty input, handling non-empty input, respecting the 30-channel limit, respecting pinned channels).
-- [ ] Manual end-to-end testing using a browser simulator for geolocation.
-- [ ] Verify output format matches the "clipboard format" standard.
+- [x] Manual end-to-end testing using a browser simulator for geolocation.
+- [x] Implement integration test for the import flow using Playwright.
+- [x] Verify output format matches the "clipboard format" standard.
