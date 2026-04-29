@@ -9,8 +9,7 @@ from converter.mock_repeaterbook import get_mock_repeaters
 
 api_bp = Blueprint('api', __name__)
 
-# Use absolute path or relative to app root for consistency
-
+# Use absolute path or app root for consistency
 UPLOAD_FOLDER = os.path.abspath(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'uploads'))
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
@@ -115,10 +114,6 @@ def paste_conversion():
         if not output_csv:
             return 'Conversion produced no content', 200
         
-        # Create output filename for the session (since we don't save it to a file in paste mode, 
-        # but we want to show it in the textarea)
-        # We'll just show it in the textarea as in upload_file.
-        
         warning_html = f'<div class="alert alert-warning mt-2 mb-0">{warning}</div>' if warning else ""
         
         return f'''
@@ -150,7 +145,7 @@ def set_location():
     print(f"Received location: Lat {lat}, lon: {lon}")
     
     return jsonify({"status": "success", "message": f"Location updated: {lat}, {lon}"}), 200
-
+    
 @api_bp.route('/import-repeaters', methods=['POST'])
 def import_repeaters():
     data = request.get_json()
@@ -159,11 +154,131 @@ def import_repeaters():
     
     lat = data.get('latitude')
     lon = data.get('longitude')
+    current_content = data.get('current_content', '')
     
     try:
-        repeaters = get_mock_repeaters(lat, lon)
-        return jsonify({"status": "success", "repeaters": repeaters}), 200
+        new_repeaters_raw = get_mock_repeaters(lat, lon)
+        
+        if not current_content:
+            return jsonify({
+                "status": "success",
+                "action": "show_pinning",
+                "existing_channels": [],
+                "repeaters": new_repeaters_raw
+            }), 200
+
+        from converter.logic import detect_format
+        from converter.parsers import ChirpParser, BtechParser, ClipboardParser
+        from converter.models import Channel
+        
+        fmt = detect_format(current_content)
+        
+        channels = []
+        if fmt == 'chirp':
+            channels = ChirpParser().parse(current_content)
+        elif fmt == 'btech':
+            channels = BtechParser().parse(current_content)
+        elif fmt == 'clipboard':
+            channels = ClipboardParser().parse(current_content)
+        else:
+            try:
+                channels = BtechParser().parse(current_content)
+            except:
+                channels = []
+        
+        existing_channels_dicts = []
+        for ch in channels:
+            existing_channels_dicts.append({
+                "n": ch.name,
+                "rf": ch.rx_freq_hz,
+                "tf": ch.tx_freq_hz,
+                "ts": ch.tx_sub_audio_hz,
+                "rs": ch.rx_sub_audio_hz
+            })
+
+        return jsonify({
+            "status": "success",
+            "action": "show_pinning",
+            "existing_channels": existing_channels_dicts,
+            "repeaters": new_repeaters_raw
+        }), 200
+
     except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+@api_bp.route('/apply-import', methods=['POST'])
+def apply_import():
+    data = request.get_json()
+    pinned_indices = data.get('pinned_indices', [])
+    new_repeaters_raw = data.get('new_repeaters', [])
+    current_content = data.get('current_content', '')
+    
+    try:
+        from converter.logic import detect_format
+        from converter.parsers import ChirpParser, BtechParser, ClipboardParser
+        from converter.parsers import ChirpGenerator, BtechGenerator, ClipboardGenerator
+        from converter.models import Channel
+
+        fmt = detect_format(current_content)
+        
+        channels = []
+        if fmt == 'chirp':
+            channels = ChirpParser().parse(current_content)
+        elif fmt == 'btech':
+            channels = BtechParser().parse(current_content)
+        elif fmt == 'clipboard':
+            channels = ClipboardParser().parse(current_content)
+        else:
+            try:
+                channels = BtechParser().parse(current_content)
+            except:
+                channels = []
+
+        # Filter to only pinned channels
+        pinned_channels = [channels[i] for i in pinned_indices if i < len(channels)]
+        
+        # Add new repeaters
+        for nr in new_repeaters_raw:
+            ch = Channel()
+            ch.name = nr.get('n', '')
+            ch.rx_freq_hz = nr.get('rf', 0)
+            ch.tx_freq_hz = nr.get('tf', 0)
+            ch.rx_sub_audio_hz = nr.get('rs', 0)
+            ch.tx_sub_audio_hz = nr.get('ts', 0)
+            pinned_channels.append(ch)
+            
+        output_format = fmt if fmt in ['chirp', 'btech', 'clipboard'] else 'btech'
+        
+        if output_format == 'chirp':
+            output_content, error = ChirpGenerator().generate(pinned_channels)
+            format_type = 'csv'
+        elif output_format == 'btech':
+            output_content, error = BtechGenerator().generate(pinned_channels)
+            format_type = 'btech'
+        elif output_format == 'clipboard':
+            output_content, error = ClipboardGenerator().generate(pinned_channels)
+            format_type = 'btech'
+        else:
+            output_content, error = BtechGenerator().generate(pinned_channels)
+            format_type = 'btech'
+            
+        if error and error != "Truncated":
+            return jsonify({"error": error}), 500
+            
+        return jsonify({
+            "status": "success",
+            "action": "update_text",
+            "content": output_content,
+            "format_type": format_type,
+            "repeaters": new_repeaters_raw,
+            "warning": error
+        }), 200
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
 @api_bp.route('/history/fragment')
@@ -175,4 +290,3 @@ def history_fragment():
     conn.close()
     
     return render_template('partials/history_fragment.html', history_items=rows)
-

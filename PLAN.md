@@ -1,55 +1,40 @@
-# Plan: RepeaterBook Import Feature
+# Plan: Backend-Driven Repeater Import and Merging
 
-## Overview
-Implement a feature that allows users to automatically update their channel list with the closest repeaters using a mock RepeaterBook API. The feature will include location detection, a way to "pin" existing channels to prevent them from being overwritten, and a final output in the "clipboard format".
+The goal is to move the repeater import and merging logic from the client-side JavaScript to the Python backend, following HTMX design principles. This will ensure that the "pinning" UI is triggered correctly and that different input formats (CSV vs. Clipboard) are handled robustly without data loss.
 
 ## Objectives
-- [x] Implement a mock Repeambook API that returns 30 repeaters based on a given location.
-- [x] Integrate browser Geolocation API to detect user location.
-- [x] Add a "RepeaterBook Import" button to the UI.
-- [x] Implement a channel selection interface to allow "pinning" of existing channels.
-- [x] Implement the logic for merging pinned channels with new repeater channels (up/to 30 total).
-- [x] Ensure the final output is updated in the "clipboard format".
+- Move merging logic from `main.js` to `routes.py`.
+- Support merging new repeaters into both BTECH Clipboard format and CSV formats.
+- Prevent accidental overwriting of CSV data when importing repeaters.
+- Ensure the pinning UI is triggered only when existing BTECH Clipboard data is present.
 
 ## Implementation Steps
 
-### 1. Research and Setup
-- [x] Analyze existing channel management and "clipboard format" generation logic.
-- [x] Identify the best place to integrate the new import logic within the current application flow.
+### 1. Backend Refactoring (`src/app/api/routes.py`)
+- Update the `/api/import-repeaters` endpoint to accept `current_content` (the text currently in the textarea).
+- Implement logic to:
+    - Parse `current_content` to detect format (BTECH Clipboard vs. CSV).
+    - If BTECH Clipboard: Return the new repeaters and a signal to show the pinning UI (`action: "show_pinning"`).
+    - If CSV: Append the new repeaters as new rows (in a compatible format) and return the updated CSV content with a signal to update the text only (`action: "update_text"`).
+    - If empty: Return new repeaters and a signal to update the text (`action: "update_text"`).
+- Ensure the response JSON structure is consistent, e.g.:
+  ```json
+  {
+    "action": "show_pinning" | "update_text",
+    "repeaters": [...],
+    "updated_content": "..."
+  }
+  ```
 
-### 2. Mock API Development
-- [x] Create a mock function `getMockRepeaters(location)` that:
-    - [x] Takes latitude and longitude as input.
-    - [x] Returns a list of 30 simulated repeater objects (name, frequency, etc.).
-    - [x] Provides a variety of frequencies to simulate real-world scenarios.
+### 2. Frontend Refactoring (`src/app/static/js/main.js`)
+- Update `handleImportRepeaters` to:
+    - Extract `currentContent` from the textarea.
+    - Send `currentContent` to the `/api/import-import-repeaters` endpoint.
+    - Handle the new response structure:
+        - If `action === "show_pinning"`: Proceed with the existing pinning UI logic (using the `repeaters` array).
+        - If `action === "update_text"`: Update the textarea with `updated_content` and show a success alert.
 
-### 3. Core Feature Logic
-- [x] Implement `detectUserLocation()` using `navigator.geolocation`.
-- [x] Implement `handleRepeaterBookImport()`:
-    - [x] If "Text Input" is empty:
-        - [x] Fetch mock repeaters for current location.
-        [x] Update "Output Text" with these 30 channels in clipboard format.
-    - [x] If "Text Input" is NOT empty:
-        - [x] Parse existing channels from "Text Input".
-        - [x] Display a list of these channels with checkboxes.
-        - [x] Wait for user to click a "Confirm" button.
-    - [x] Upon confirmation:
-        - [x] Fetch mock repeaters for current location.
-        - [x] Combine "pinned" (checked) channels with new repeaters.
-        - [x] Maintain a maximum of 30 channels (prioritizing pinned ones, then filling the rest with new ones).
-        - [x] Update "Output Text" with the resulting list in clipboard format.
-
-### 4. UI/UX Implementation
-- [x] Add "RepeaterBook Import" button.
-- [x] Create the "Pinning Interface" (modal or inline list) with:
-    - [x] List of current channels.
-    - [x] Checkboxes for each channel.
-    - [x] "Confirm" button.
-- [x] Ensure the interface is mobile-friendly.
-
-### 5. Testing and Validation
-- [x] Unit tests for `getMockRepeaters`.
-- [x] Unit tests for the merging logic (handling empty input, handling non-empty input, respecting the 30-channel limit, respecting pinned channels).
-- [x] Manual end-to-end testing using a browser simulator for geolocation.
-- [x] Implement integration test for the import flow using Playwright.
-- [x] Verify output format matches the "clipboard format" standard.
+### 3. Verification
+- Verify that importing repeaters when the textarea has BTECH Clipboard content triggers the pinning UI.
+- Verify that importing repeaters when the textarea has CHIRP/BTECH CSV content appends the new repeaters to the CSV without losing existing data.
+- Verify that importing repeaters when the textarea is empty correctly populates it with the new format.

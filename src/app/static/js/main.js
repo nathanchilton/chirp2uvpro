@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (locationBtn) {
             if (!navigator.geolocation) {
-                alert("Geolocation is or not supported by your browser");
+                alert("Geolocation is not supported by your browser");
                 return;
             }
 
@@ -87,9 +87,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 2. Handle tab switching
     document.addEventListener('click', (event) => {
-        const tab = event.target.closest('.nav-clip-link'); // Wait, I should check the actual class in HTML
-        // I will use a more generic selector or check the actual class from the HTML
-        // Looking at previous edits, it was .nav-link
         const navLink = event.target.closest('.nav-link');
         if (navLink) {
             const container = navLink.closest('.nav-tabs');
@@ -169,19 +166,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 const lon = position.coords.longitude;
 
                 try {
+                    const textarea = document.querySelector('textarea[name="content"]');
+                    const currentContent = textarea ? textarea.value : '';
+
                     const response = await fetch('/api/import-repeaters', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ latitude: lat, longitude: lon })
+                        body: JSON.stringify({ 
+                            latitude: lat, 
+                            longitude: lon,
+                            current_content: currentContent
+                        })
                     });
 
                     const data = await response.json();
                     if (!response.ok) throw new Error(data.error);
 
                     const newRepeaters = data.repeaters;
-                    const textarea = document.querySelector('textarea[name="content"]');
-                    const currentContent = textarea ? textarea.value : '';
-                    const existingChannels = parseClipboardFormat(currentContent);
+                    const existingChannels = data.existing_channels;
 
                     if (existingChannels.length === 0) {
                         // Just import all new ones (up to 30)
@@ -235,7 +237,7 @@ document.addEventListener('DOMContentLoaded', () => {
         html += `
                     </ul>
                 </div>
-                <div class="card-footer text-end">
+                <div class="card-inner">
                     <button id="apply-import-btn" class="btn btn-success">Apply Import</button>
                     <button id="cancel-import-btn" class="btn btn-secondary">Cancel</button>
                 </div>
@@ -245,18 +247,39 @@ document.addEventListener('DOMContentLoaded', () => {
         resultDiv.innerHTML = html;
 
         // Attach events to new buttons
-        document.getElementById('apply-import-btn').onclick = () => {
+        document.getElementById('apply-import-btn').onclick = async () => {
             const checkedIndices = Array.from(document.querySelectorAll('.channel-pin-check:checked')).map(el => parseInt(el.value));
-            const pinnedChannels = checkedIndices.map(idx => existingChannels[idx]);
-            
-            // Merge pinned with new (limit 30)
-            const merged = [...pinnedChannels, ...newRepeaters].slice(0, 30);
-            
             const textarea = document.querySelector('textarea[name="content"]');
-            textarea.value = formatClipboard(merged);
-            
-            resultDiv.innerHTML = '';
-            alert("Import applied successfully!");
+            const currentContent = textarea ? textarea.value : '';
+
+            try {
+                const response = await fetch('/api/apply-import', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        pinned_indices: checkedIndices,
+                        new_repeaters: newRepeaters,
+                        current_content: currentContent
+                    })
+                });
+
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error);
+
+                if (data.action === 'update_text') {
+                    textarea.value = data.content;
+                }
+
+                if (data.warning) {
+                    alert(`Warning: ${data.warning}`);
+                }
+
+                resultDiv.innerHTML = '';
+                alert("Import applied successfully!");
+            } catch (error) {
+                console.error("Apply import failed:", error);
+                alert(`Apply import failed: ${error.message}`);
+            }
         };
 
         document.getElementById('cancel-import-btn').onclick = () => {
