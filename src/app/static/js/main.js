@@ -185,13 +185,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     const newRepeaters = data.repeaters;
                     const existingChannels = data.existing_channels;
 
-                    if (existingChannels.length === 0) {
-                        // Just import all new ones (up to 30)
-                        textarea.value = formatClipboard(newRepeaters.slice(0, 30));
-                        alert("Imported 30 new repeaters!");
-                    } else {
-                        // Show pinning UI
-                        showPinningUI(existingChannels, newRepeaters);
+                    if (data.action === 'update_text') {
+                        textarea.value = data.content;
+                        alert("Imported new repeaters!");
+                    } else if (data.action === 'show_pinning') {
+                        showPinningUI(data.existing_channels, data.repeaters);
                     }
 
                     importBtn.textContent = originalText;

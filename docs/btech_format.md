@@ -8,12 +8,10 @@ The BTECH format is a CSV-based format used by the BTECH application.
 | --- | --- |
 | Location | The index or location number of the channel. |
 | Name | The name of the repeater or frequency. |
-| Frequency | The receive frequency. |
-| Duplex | The duplex mode (`+`, `-`, or empty). |
-| Offset | The frequency offset. |
-| Tone | The tone mode (`Tone`, `TSQL-R`, or empty). |
-| rToneFreq | The receive tone frequency. |
-| cToneFreq | The transmit tone frequency. |
+| Frequency | The receive frequency (MHz). |
+| Offset | The frequency offset (MHz). |
+| rToneFreq | The receive tone frequency (MHz). |
+| cToneFreq | The transmit tone frequency (MHz).
 | DtcsCode | DTCS code. |
 | DtcsPolarity | DTCS polarity (`NN` or `SS`). |
 | RxDtcsCode | Receive DTCS code. |

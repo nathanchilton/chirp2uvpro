@@ -10,12 +10,12 @@ The column structure is similar to the BTECH format.
 | --- | --- |
 | Location | The index or location number of the channel. |
 | Name | The name of the repeater or frequency. |
-| Frequency | The receive frequency. |
+| Frequency | The receive frequency (MHz). |
 | Duplex | The duplex mode (`+`, `-`, or empty). |
-| Offset | The frequency offset. |
+| Offset | The frequency offset (MHz). |
 | Tone | The tone mode (`Tone`, `TSQL-R`, or empty). |
-| rToneFreq | The receive tone frequency. |
-| cTone... | ... |
+| rToneFreq | The receive tone frequency (Hz). |
+| cToneFreq | The transmit tone frequency (Hz).
 
 *(Note: Based on the provided examples, the column structure for CHIRP and BTECH is identical.)*
 

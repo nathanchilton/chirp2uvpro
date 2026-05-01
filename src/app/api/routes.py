@@ -4,8 +4,10 @@ import uuid
 import html
 from flask import Blueprint, request, jsonify, render_template
 from converter.logic import convert_format, ConversionError
+from converter.utils import format_freq_to_hz, format_sub_audio_to_hz
 from database import get_db_connection
 from converter.mock_repeaterbook import get_mock_repeaters
+
 
 api_bp = Blueprint('api', __name__)
 
@@ -159,33 +161,49 @@ def import_repeaters():
     try:
         new_repeaters_raw = get_mock_repeaters(lat, lon)
         
-        if not current_content:
-            return jsonify({
-                "status": "success",
-                "action": "show_pinning",
-                "existing_channels": [],
-                "repeaters": new_repeaters_raw
-            }), 200
-
         from converter.logic import detect_format
-        from converter.parsers import ChirpParser, BtechParser, ClipboardParser
+        from converter.parsers import ChirpParser, BtechParser, ClipboardParser, ApiImportParser
         from converter.models import Channel
-        
-        fmt = detect_format(current_content)
+        from converter.parsers import BtechGenerator
         
         channels = []
-        if fmt == 'chirp':
-            channels = ChirpParser().parse(current_content)
-        elif fmt == 'btech':
-            channels = BtechParser().parse(current_content)
-        elif fmt == 'clipboard':
-            channels = ClipboardParser().parse(current_content)
-        else:
-            try:
+        if current_content:
+            fmt = detect_format(current_content)
+            if fmt == 'chirp':
+                channels = ChirpParser().parse(current_content)
+            elif fmt == 'btech':
                 channels = BtechParser().parse(current_content)
-            except:
-                channels = []
+            elif fmt == 'clipboard':
+                channels = ClipboardParser().parse(current_content)
+            elif fmt == 'api-import':
+                channels = ApiImportParser().parse(current_content)
+            else:
+                try:
+                    channels = BtechParser().parse(current_content)
+                except:
+                    channels = []
         
+        if not channels:
+            # No existing channels to pin, so we just import the new ones as a new BTECH list
+            new_channels = []
+            for nr in new_repeaters_raw:
+                ch = Channel()
+                ch.name = nr.get('n', '')
+                ch.rx_freq_hz = format_freq_to_hz(nr.get('rf', 0))
+                ch.tx_freq_hz = format_freq_to_hz(nr.get('tf', 0))
+                ch.rx_sub_audio_hz = format_sub_audio_to_hz(nr.get('s', 0)) # Wait, checking key name in mock
+                ch.tx_sub_audio_hz = format_sub_audio_to_hz(nr.get('ts', 0))
+                new_channels.append(ch)
+            
+            output_content, error = BtechGenerator().generate(new_channels)
+            return jsonify({
+                "status": "success",
+                "action": "update_text",
+                "content": output_content,
+                "repeaters": new_repeaters_raw,
+                "warning": error
+            }), 200
+
         existing_channels_dicts = []
         for ch in channels:
             existing_channels_dicts.append({
@@ -195,7 +213,7 @@ def import_repeaters():
                 "ts": ch.tx_sub_audio_hz,
                 "rs": ch.rx_sub_audio_hz
             })
-
+        
         return jsonify({
             "status": "success",
             "action": "show_pinning",
@@ -243,10 +261,10 @@ def apply_import():
         for nr in new_repeaters_raw:
             ch = Channel()
             ch.name = nr.get('n', '')
-            ch.rx_freq_hz = nr.get('rf', 0)
-            ch.tx_freq_hz = nr.get('tf', 0)
-            ch.rx_sub_audio_hz = nr.get('rs', 0)
-            ch.tx_sub_audio_hz = nr.get('ts', 0)
+            ch.rx_freq_hz = format_freq_to_hz(nr.get('rf', 0))
+            ch.tx_freq_hz = format_freq_to_hz(nr.get('tf', 0))
+            ch.rx_sub_audio_hz = format_sub_audio_to_hz(nr.get('rs', 0))
+            ch.tx_sub_audio_hz = format_sub_audio_to_hz(nr.get('ts', 0))
             pinned_channels.append(ch)
             
         output_format = fmt if fmt in ['chirp', 'btech', 'clipboard'] else 'btech'
@@ -267,6 +285,7 @@ def apply_import():
         if error and error != "Truncated":
             return jsonify({"error": error}), 500
             
+        print(f"DEBUG: output_content length: {len(output_content)}")
         return jsonify({
             "status": "success",
             "action": "update_text",

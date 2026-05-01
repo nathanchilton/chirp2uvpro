@@ -7,7 +7,7 @@ class TestBtechParserSubAudioCSV(unittest.TestCase):
         # CSV content where rf is missing (or 0), so rx_f should become tx_f
         # and rx_sub_audio_hz should also become tx_sub_audio_hz
         # Using a simple CSV format
-        csv_content = "title,tx_freq,rx_freq,tx_sub_audio,rx_sub_audio\nTest,462000000,0,1000,0"
+        csv_content = "title,tx_freq,rx_freq,tx_sub_audio,rx_sub_audio\nTest,462.0,0,1000,0"
         channels = parser.parse(csv_content)
         
         self.assertEqual(len(channels), 1)

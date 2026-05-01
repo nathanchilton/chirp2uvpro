@@ -17,9 +17,9 @@ The JSON object contains a `chs` array, where each element in the array represen
 | Field | Description |
 | --- | --- |
 | `n` | Name of the channel. |
-| `rf` | Receive frequency (as a string). |
-| `tf` | Transmit frequency (as a string, optional). |
-| `ts` | Tone frequency in Hz (as a string, optional). |
+| `rf` | Receive frequency (MHz, as a string). |
+| `tf` | Transmit frequency (MHz, as a string, optional). |
+| `ts` | Tone frequency (0.1 Hz units, as a string, optional). |
 | `s` | Split mode (1 for enabled, 0 for disabled, optional). |
 | `id` | ID (optional). |
 | `p` | Power (optional). |

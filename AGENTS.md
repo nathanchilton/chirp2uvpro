@@ -6,6 +6,12 @@ CRITICAL: You MUST use tools to complete tasks. NEVER say "I don't have access".
 
 After completion of any task, rerun all the unit tests and fix any regressions.  Commit all changes with an appropriate message, once the tests are passing.
 
+### Rules
+
+- Use `bd` for ALL task tracking — do NOT use todowrite, TaskCreate, or markdown TODO lists
+- Run `bd prime` for detailed command reference and session close protocol
+- Use `bd remember` for persistent knowledge — do NOT use MEMORY.md files
+
 ## Tool Schemas (EXACT parameter names - you MUST use these exactly)
 
 ### bash
@@ -80,12 +86,6 @@ bd show <id>          # View issue details
 bd update <id> --claim  # Claim work
 bd close <id>         # Complete work
 ```
-
-### Rules
-
-- Use `bd` for ALL task tracking — do NOT use TodoWrite, TaskCreate, or markdown TODO lists
-- Run `bd prime` for detailed command reference and session close protocol
-- Use `bd remember` for persistent knowledge — do NOT use MEMORY.md files
 
 ## Session Completion
 

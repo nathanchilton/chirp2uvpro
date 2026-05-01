@@ -64,7 +64,7 @@ def test_clipboard_roundtrip_csv():
 def test_clipboard_roundtrip_csv_subaudio():
     # Test CSV with sub-audio frequencies
     # Use the full format produced by the generator
-    original_content = 'Copy this text and start BTECH UVname,tx_freq_hz,rx_freq_hz,tx_sub_audio_hz,rx_sub_audio_hz\nTestCh,146.52,146.52,0.1318,0.1318'
+    original_content = 'Copy this text and start BTECH UVname,tx_freq_hz,rx_freq_hz,tx_sub_audio_hz,rx_sub_audio_hz\nTestCh,146.52,146.52,131.8,131.8'
     
     parser = ClipboardParser()
     generator = ClipboardGenerator(format='json')
