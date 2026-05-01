@@ -51,10 +51,10 @@ class ClipboardParser(BaseParser):
                     ch_dict = ch.copy()
                     
                     name = ch_dict.get('name', ch_dict.get('n', ''))
-                    rx_freq_hz = format_freq_to_hz(ch_dict.get('rx_freq_hz', ch_dict.get('rf', 0)))
-                    tx_freq_hz = format_freq_to_hz(ch_dict.get('tx_freq_hz', ch_dict.get('tf', 0)))
-                    tx_sub_audio_hz = format_sub_audio_to_hz(ch_dict.get('tx_sub_audio_hz', ch_dict.get('ts', 0)))
-                    rx_sub_audio_hz = format_sub_audio_to_hz(ch_dict.get('rx_sub_audio_hz', ch_dict.get('rs', 0)))
+                    rx_freq_hz = format_freq_to_hz(ch_dict.get('rx_freq_hz', ch_dict.get('rf', 0)), scale='MHz')
+                    tx_freq_hz = format_freq_to_hz(ch_dict.get('tx_freq_hz', ch_dict.get('tf', 0)), scale='MHz')
+                    tx_sub_audio_hz = format_sub_audio_to_hz(ch_dict.get('tx_sub_audio_hz', ch_dict.get('ts', 0)), scale='Hz')
+                    rx_sub_audio_hz = format_sub_audio_to_hz(ch_dict.get('rx_sub_audio_hz', ch_dict.get('rs', 0)), scale='Hz')
                     scan = str(ch_dict.get('scan', ch_dict.get('s', '0'))).strip() in ['1', 'true', 'True']
                     tx_power = normalize_power(ch_dict.get('tx_power', ch_dict.get('p', 'M')))
 
@@ -68,6 +68,8 @@ class ClipboardParser(BaseParser):
                         tx_power=tx_power
                     ))
                 return channels
+
+
             except (json.JSONDecodeError, ValueError, KeyError):
                 pass
 
@@ -87,10 +89,10 @@ class ClipboardParser(BaseParser):
             channels = []
             for _, row in df.iterrows():
                 name = str(row.get('name', ''))
-                rx_freq_hz = format_freq_to_hz(row.get('rx_freq_hz', 0))
-                tx_freq_hz = format_freq_to_hz(row.get('tx_freq_hz', 0))
-                tx_sub_audio_hz = format_sub_audio_to_hz(row.get('tx_sub_audio_hz', 0))
-                rx_sub_audio_hz = format_sub_audio_to_hz(row.get('rx_sub_audio_hz', 0))
+                rx_freq_hz = format_freq_to_hz(row.get('rx_freq_hz', 0), scale='MHz')
+                tx_freq_hz = format_freq_to_hz(row.get('tx_freq_hz', 0), scale='MHz')
+                tx_sub_audio_hz = format_sub_audio_to_hz(row.get('tx_sub_audio_hz', 0), scale='Hz')
+                rx_sub_audio_hz = format_sub_audio_to_hz(row.get('rx_sub_audio_hz', 0), scale='Hz')
                 scan = str(row.get('scan', '0')).strip() in ['1', 'true', 'True']
                 tx_power = normalize_power(row.get('tx_power', 'M'))
 
@@ -126,12 +128,12 @@ class ClipboardGenerator(BaseGenerator):
             chs = []
             for ch in channels:
                 chs.append({
-                    "n": ch.name,
-                    "rf": format_freq_to_mhz(ch.rx_freq_hz),
-                    "tf": format_freq_to_mhz(ch.tx_freq_hz),
+                     "n": ch.name,
+                     "rf": format_freq_to_mhz(ch.rx_freq_hz, scale='Hz'),
+                     "tf": format_freq_to_mhz(ch.tx_freq_hz, scale='Hz'),
                      "ts": ch.tx_sub_audio_hz,
                      "rs": ch.rx_sub_audio_hz,
-                     "s": 1 if ch.scan else 0,
+                    "s": 1 if ch.scan else 0,
                     "id": 0, # Dummy
                     "p": "0" # Dummy
                 })
@@ -145,7 +147,7 @@ class ClipboardGenerator(BaseGenerator):
             # Generate CSV format
             output = "Copy this text and start BTECH UVname,tx_freq_hz,rx_freq_hz,tx_sub_audio_hz,rx_sub_audio_hz\n"
             for ch in channels:
-                 output += f"{ch.name},{format_freq_to_mhz(ch.tx_freq_hz)},{format_freq_to_mhz(ch.rx_freq_hz)},{ch.tx_sub_audio_hz},{ch.rx_sub_audio_hz}\n"
+                output += f"{ch.name},{format_freq_to_mhz(ch.tx_freq_hz, scale='Hz')},{format_freq_to_mhz(ch.rx_freq_hz, scale='Hz')},{ch.tx_sub_audio_hz},{ch.rx_sub_audio_hz}\n"
             return output.strip(), status_msg
         
         return "", None

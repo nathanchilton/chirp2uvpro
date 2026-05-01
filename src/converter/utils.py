@@ -18,54 +18,96 @@ def format_number_to_str(val):
     except (ValueError, TypeError):
         return str(val)
 
-def format_freq_to_hz(freq_val):
-    """Converts frequency to Hz. If value < 1000, assumes MHz. Otherwise assumes Hz."""
+def format_freq_to_hz(freq_val, scale='MHz'):
+    """Converts frequency to Hz based on provided scale."""
     try:
         if pd.isna(freq_val):
             return 0.0
         f = float(freq_val)
         if f == 0:
             return 0.0
-        if f < 1000: # Assumes MHz
+        
+        if scale == 'MHz':
             return round(f * 1_000_000, 3)
-        else: # Assumes Hz
+        elif scale == 'kHz':
+            return round(f * 1_000, 3)
+        elif scale == 'Hz':
             return round(f, 3)
+        else:
+            # Fallback to original logic if scale is unknown
+            if f < 1000: # Assumes MHz
+                return round(f * 1_000_000, 3)
+            else: # Assumes Hz
+                return round(f, 3)
     except (ValueError, TypeError):
         return 0.0
 
-def format_sub_audio_to_hz(sub_audio_val):
-    """Converts sub-audio frequency to Hz. If value < 1, assumes kHz."""
+def format_sub_audio_to_hz(sub_audio_val, scale='Hz'):
+    """Converts sub-audio frequency to Hz based on provided scale."""
     try:
         if pd.isna(sub_audio_val):
             return 0.0
         f = float(sub_audio_val)
         if f == 0:
             return 0.0
-        if f < 1.0: # Assumes kHz
+        
+        if scale == '0.01Hz':
+            return round(f * 0.01, 3)
+        elif scale == '0.1Hz':
+            return round(f * 0.1, 3)
+        elif scale == 'kHz':
             return round(f * 1000, 3)
-        return round(f, 3)
+        elif scale == 'Hz':
+            return round(f, 3)
+        elif scale == 'MHz':
+            return round(f * 1_000_000, 3)
+        else:
+            # Fallback to original logic if scale is unknown
+            if f < 1.0: # Assumes kHz
+                return round(f * 1000, 3)
+            return round(f, 3)
     except (ValueError, TypeError):
         return 0.0
 
-def format_freq_to_mhz(freq_val):
-    """Converts frequency to MHz."""
+def format_freq_to_mhz(freq_val, scale='Hz'):
+    """Converts frequency to MHz based on provided scale."""
     try:
         if pd.isna(freq_val):
             return 0.0
         f = float(freq_val)
-        f /= 1_000_000
-        return f
+        if f == 0:
+            return 0.0
+        
+        if scale == 'MHz':
+            return f
+        elif scale == 'kHz':
+            return f / 1_000
+        elif scale == 'Hz':
+            return f / 1_000_000
+        else:
+            return f / 1_000_000 # Default fallback
     except (ValueError, TypeError):
         return 0.0
 
-def format_sub_audio_to_mhz(sub_audio_val):
-    """Converts sub-audio frequency to MHz."""
+def format_sub_audio_to_mhz(sub_audio_val, scale='Hz'):
+    """Converts sub-audio frequency to MHz based on provided scale."""
     try:
         if pd.isna(sub_audio_val):
             return 0.0
-        v = float(sub_audio_val)
-        v /= 1_000_000
-        return v
+        f = float(sub_audio_val)
+        if f == 0:
+            return 0.0
+        
+        if scale == '0.1Hz':
+            return (f * 0.1) / 1_000_000
+        elif scale == 'kHz':
+            return (f * 1000) / 1_000_000
+        elif scale == 'Hz':
+            return f / 1_000_000
+        elif scale == 'MHz':
+            return f
+        else:
+            return f / 1_000_000 # Default fallback
     except (ValueError, TypeError):
         return 0.0
 
@@ -84,7 +126,7 @@ def normalize_power(p_str):
 
 def format_power_to_btech(p_str):
     """Converts power string (H, M, L, 4.0W, etc.) to Btech format (H, M, L)."""
-    if pd.isna(p_str) or str(p_str).lower() == 'nan' or str(p_str).strip() == '':
+    if pd.isna(p_str) or str(p_str).lower() == 'far' or str(p_str).strip() == '':
         return ''
     p_str = str(p_str).upper()
     p_map = {"H": "H", "M": "M", "L": "L", "4.0W": "H", "2.5W": "M", "1.0W": "L"}
@@ -97,3 +139,16 @@ def format_power_to_chirp(p_str):
     p_str = str(p_str).upper()
     p_map = {"H": "4.0W", "M": "2.5W", "L": "1.0W", "4.0W": "4.0W", "2.5W": "2.5W", "1.0W": "1.0W"}
     return p_map.get(p_str, p_str)
+
+def calculate_rx_freq_and_duplex(tx_freq_hz: float, offset_hz: float, duplex: str) -> tuple[float, str]:
+    """Calculates rx_freq_hz and duplex based on tx_freq_hz, offset_hz, and duplex string."""
+    if duplex == '-':
+        return tx_freq_hz - offset_hz, '-'
+    elif duplex == '+':
+        return tx_freq_hz + offset_hz, '+'
+    elif duplex == 'none':
+        return tx_freq_hz, 'none'
+    else:
+        # Inference
+        # We don't know rx_freq_hz yet, so we use tx_freq_hz as a base for inference
+        return tx_freq_hz, 'none' # Default fallback

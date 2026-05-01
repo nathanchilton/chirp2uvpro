@@ -27,3 +27,19 @@ class Channel:
     tx_modulation: str = "FM"
     # Extra fields that might be present in some formats
     extra_fields: dict = field(default_factory=dict)
+
+    @classmethod
+    def from_mock_dict(cls, data: dict) -> 'Channel':
+        """Creates a Channel from the mock repeater dictionary format."""
+        ch = cls()
+        ch.name = data.get('n', '')
+        # Frequency in MHz
+        freq_mhz = data.get('rf', 0.0) or data.get('tf', 0.0)
+        ch.tx_freq_hz = freq_mhz * 1_000_000
+        ch.rx_freq_hz = freq_mhz * 1_000_000
+        
+        # Sub-audio in Hz
+        sub_audio_hz = data.get('ts', 0.0) or data.get('rs', 0.0)
+        ch.tx_sub_audio_hz = sub_audio_hz
+        ch.rx_sub_audio_hz = sub_audio_hz
+        return ch

@@ -5,6 +5,7 @@ from .base import BaseParser, BaseGenerator
 from .models import Channel
 from .utils import (
     format_freq_to_hz,
+    format_freq_to_mhz,
     format_sub_audio_to_hz,
     format_power_to_btech,
     format_power_to_chirp,
@@ -38,7 +39,7 @@ class ChirpParser(BaseParser):
                 ch.location = str(next((row[k] for k in ['Location', 'location', 'loc'] if k in row and pd.notna(row[k])), ''))
                 
                 tx_f_val = next((row[k] for k in ['Frequency', 'tx_freq', 'tx'] if k in row and pd.notna(row[k])), 0)
-                ch.tx_freq_hz = float(format_freq_to_hz(tx_f_val))
+                ch.tx_freq_hz = float(format_freq_to_hz(tx_f_val, scale='MHz'))
                 
                 rx_f_val = next((row[k] for k in ['rx_freq', 'rx_frequency', 'rx'] if k in row and pd.notna(row[k])), None)
                 duplex = 'none'
@@ -51,10 +52,10 @@ class ChirpParser(BaseParser):
                 
                 offset_val = row.get('Offset', 0)
                 if pd.notna(offset_val):
-                    offset_hz = float(format_freq_to_hz(offset_val))
+                    offset_hz = float(format_freq_to_hz(offset_val, scale='MHz'))
                 
                 if rx_f_val is not None:
-                    ch.rx_freq_hz = float(format_freq_to_hz(rx_f_val))
+                    ch.rx_freq_hz = float(format_freq_to_hz(rx_f_val, scale='MHz'))
                 else:
                     if duplex == '-':
                         ch.rx_freq_hz = ch.tx_freq_hz - offset_hz
@@ -76,19 +77,17 @@ class ChirpParser(BaseParser):
                     ch.bandwidth_hz = 25000
                 
                 # Parse TX sub-audio frequency independently
-                r_tone = next((row[k] for k in ['rToneFreq', 'ctonef', 'ctost', 'tx_sub_audio', 'rx_sub_audio', 'tx_sub_audio(CTCSS=freq/DCS=number)', 'rx_sub_audio(CTCSS=forDCS=number)'] if k in row and pd.notna(row[k])), 0)
-                ch.tx_sub_audio_hz = float(format_sub_audio_to_hz(r_tone)) if r_tone else 0.0
-
+                r_tone = next((row[k] for k in ['rToneFreq', 'ctonef', 'ctost', 'tx_sub_audio', 'rx_sub_audio', 'tx_sub_audio(CTCSS=freq/DCS=number)', 'rx_sub_audio(CTCSS=freq/DCS=number)'] if k in row and pd.notna(row[k])), 0)
+                ch.tx_sub_audio_hz = float(format_sub_audio_to_hz(r_tone, scale='Hz')) if r_tone else 0.0
+                
                 # Parse RX sub-audio frequency independently
                 rx_sub_val = next((row[k] for k in ['cToneF', 'cToneFreq', 'rx_sub_audio', 'ctcss', 'tx_sub_audio', 'rx_sub_audio(CTCSS=freq/DCS=number)', 'tx_sub_audio(CTCSS=freq/DCS=number)'] if k in row and pd.notna(row[k])), 0)
-                ch.rx_sub_audio_hz = float(format_sub_audio_to_hz(rx_sub_val)) if rx_sub_val else 0.0
-
+                ch.rx_sub_audio_hz = float(format_sub_audio_to_hz(rx_sub_val, scale='Hz')) if rx_sub_val else 0.0
                 
                 tx_p_val = next((row[k] for k in ['Power', 'tx_perm', 'p'] if k in row and pd.notna(row[k])), 'M')
                 ch.tx_power = tx_p_val
-
                 ch.skip = is_true(next((row[k] for k in ['Skip', 'skip'] if k in row and pd.notna(row[k])), False))
-
+                
                 # Handle flags
                 for flag in ['scan', 'talk_around', 'pre_de_emph_bypass', 'sign', 'tx_dis', 'bclo', 'mute']:
                     col_name = None
@@ -100,10 +99,12 @@ class ChirpParser(BaseParser):
                         setattr(ch, flag, is_true(row[col_name]))
                     else:
                         setattr(ch, flag, False)
+                
+                    ch.rx_modulation = 'FM' if next((row[k] for k in ['Mode', 'rx_modulation', 'rx_mode'] if k in row and pd.notna(row[k])), 'FM') in ['F', 'FM'] else 'AM'
 
-                ch.rx_modulation = 'FM' if next((row[k] for k in ['Mode', 'rx_modulation', 'rx_mode'] if k in row and pd.notna(row[k])), 'FM') == 'F' or next((row[k] for k in ['Mode', 'rx_modulation', 'rx_mode'] if k in row and pd.notna(row[k])), 'FM') == 'FM' else 'AM'
                 
                 channels.append(ch)
+
             
             return channels
         except Exception as e:
@@ -123,21 +124,13 @@ class ChirpGenerator(BaseGenerator):
             ch_row['Location'] = ch.location
             
             tx_f_hz = ch.tx_freq_hz
-            rx_f_hz = ch.rx_freq_hz
-            ch_row['Frequency'] = tx_f_hz / 1_000_000
+            ch_row['Frequency'] = format_freq_to_mhz(tx_f_hz, scale='Hz')
+            ch_row['Duplex'] = ch.duplex
+            ch_row['Offset'] = format_freq_to_mhz(ch.offset_hz, scale='Hz')
             
-            if tx_f_hz < rx_f_hz:
-                ch_row['Duplex'] = '+'
-                ch_row['Offset'] = (rx_f_hz - tx_f_hz) / 1_000_000
-            elif tx_f_hz > rx_f_hz:
-                ch_row['Duplex'] = '-'
-                ch_row['Offset'] = (tx_f_hz - rx_f_hz) / 1_000_000
-            else:
-                ch_row['Duplex'] = 'none'
-                ch_row['Offset'] = 0.0
-                
             tx_sub = ch.tx_sub_audio_hz
             if tx_sub > 0:
+
                 ch_row['Tone'] = 'Tone'
                 ch_row['rToneFreq'] = tx_sub
             else:
@@ -146,9 +139,10 @@ class ChirpGenerator(BaseGenerator):
 
             rx_sub = ch.rx_sub_audio_hz
             if rx_sub > 0:
-                ch_row['cToneF'] = rx_sub
+                ch_row['cToneFreq'] = rx_sub
             else:
-                ch_row['cToneF'] = 0.0
+                ch_row['cToneFreq'] = 0.0
+
             
             ch_row['Mode'] = 'FM' if ch.rx_modulation == 'FM' else 'AM'
             ch_row['TStep'] = ch.bandwidth_hz / 1000
@@ -190,16 +184,5 @@ class ChirpGenerator(BaseGenerator):
         if 'Location' not in output_df.columns:
             output_df.insert(0, 'Location', range(len(output_df)))
             
-        def format_freq_for_chirp(f_val):
-            try:
-                f = float(f_val)
-                if f >= 1_000_000:
-                    return f / 1_000_000
-                return f
-            except:
-                return 0.0
-                
-        output_df['Frequency'] = output_df['Frequency'].apply(format_freq_for_chirp)
-        
         return output_df.to_csv(index=False), None
 
