@@ -195,4 +195,3 @@ Location,Name,Frequency,Duplex,Offset,Tone,rToneFreq,cToneFreq,DtcsCode,DtcsPola
 248,K7DAV,449.925000,-,5.000000,Tone,100.0,100.0,023,NN,023,Tone->Tone,FM,5.00,,5.0W,,,,,
 249,G-EAST,462.600000,+,5.000000,Tone,179.9,179.9,023,NN,023,Tone->Tone,FM,5.00,,5.0W,,,,,
 250,G-WEST,462.550000,+,5.000000,Tone,146.2,146.2,432,NN,023,Tone->Tone,FM,5.00,,5.0W,,,,,
-
