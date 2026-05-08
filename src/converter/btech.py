@@ -8,20 +8,39 @@ from .utils import (
     format_freq_to_hz,
     format_sub_audio_to_hz,
     format_freq_to_mhz,
+    format_sub_audio_to_units,
     format_power_to_btech,
     normalize_power,
     format_number_to_str,
     is_true,
+    calculate_rx_freq_and_duplex,
 )
 
 class BtechParser(BaseParser):
     def parse(self, content: str | tuple[str, str | None]) -> List[Channel]:
+        is_btech_uv_format = False
         if isinstance(content, tuple):
             content = content[0]
         if not content:
             return []
+ 
+        # 1. Check for known prefixes and set freq_scale
+        freq_scale = 'Hz'
+        prefixes = [
+            ("Copy this text and start BTECH UV", 'MHz'),
+            ("BWE/BTECH JSON", 'MHz'),
+            ("BTECH UV", 'Hz'),
+        ]
+        for prefix, scale in prefixes:
+            if content.startswith(prefix):
+                content = content[len(prefix):].lstrip()
+                freq_scale = scale
+                if prefix == "BTECH UV":
+                    is_btech_uv_format = True
+                break
 
-        # 1. Try to find the start of JSON content
+
+        # 2. Try to find the start of JSON content
         json_start = -1
         for char in ['{', '[']:
             idx = content.find(char)
@@ -38,32 +57,28 @@ class BtechParser(BaseParser):
             except (json.JSONDecodeError, ValueError):
                 pass
 
-        # 2. Try to find the start of CSV content
-        # Strip known prefixes
-        prefixes = ["B1TECH UV", "BWE/BTECH CSV", "BTECH UV"]
-        for prefix in prefixes:
-            if content.startswith(prefix):
-                content = content[len(prefix):].lstrip()
-                break
-
+        # 3. Try to parse as JSON or CSV
         try:
             if content.strip().startswith('{') or content.strip().startswith('['):
-                import json
                 data = json.loads(content)
                 channels = []
                 if isinstance(data, list):
                     for ch_data in data:
-                        channels.append(self._parse_channel_append(ch_data))
+                        channels.append(self._parse_channel_append(ch_data, freq_scale='MHz', sub_audio_scale='Hz'))
                 elif isinstance(data, dict):
                     for ch_data in data.get('chs', []):
-                        channels.append(self._parse_channel_append(ch_data))
+                        channels.append(self._parse_channel_append(ch_data, freq_scale='MHz', sub_audio_scale='Hz'))
                 return channels
             
             df = pd.read_csv(io.StringIO(content))
             if df.empty:
                 return []
-
+ 
             cols = df.columns.tolist()
+            if 'Frequency' in cols:
+                freq_scale = 'MHz'
+
+
             def find_col(keywords):
                 for kw in keywords:
                     for col in cols:
@@ -101,60 +116,54 @@ class BtechParser(BaseParser):
                     ch.name = str(row[col_map['name']]) if col_map['name'] and not pd.isna(row[col_map['name']]) else ''
                     ch.location = str(row[col_map['location']]) if col_map['location'] and not pd.isna(row[col_map['location']]) else ''
                     ch.skip = is_true(row[col_map['skip']]) if col_map['skip'] and not pd.isna(row[col_map['skip']]) else False
-                    
-                    tx_f_val = row[col_map['tx_freq']] if col_map['tx_freq'] and not pd.isna(row[col_map['tx_freq']]) else 0
-                    rx_f_val = row[col_map['rx_freq']] if col_map['rx_freq'] and not pd.isna(row[col_map['rx_freq']]) else 0
-                    ch.tx_freq_hz = float(format_freq_to_hz(tx_f_val, scale='MHz'))
-                    ch.rx_freq_hz = float(format_freq_to_hz(rx_f_val, scale='MHz'))
 
-                    if col_map['offset'] and not pd.isna(row[col_map['offset']]):
-                        offset_val = row[col_map['offset']]
-                        offset_hz = float(format_freq_to_hz(offset_val, scale='MHz'))
-                        ch.offset_hz = offset_hz
-                        
-                        if col_map['duplex'] and not pd.isna(row.get(col_map['duplex'])):
-                            duplex = str(row[col_map['duplex']]).strip()
-                        else:
-                            duplex = 'none'
+                    tx_f_val_raw = row[col_map['tx_freq']] if col_map['tx_freq'] and not pd.isna(row[col_map['tx_freq']]) else 0.0
+                    tx_f_val = float(tx_f_val_raw) if isinstance(tx_f_val_raw, (int, float)) else float(str(tx_f_val_raw).replace('_', ''))
+                    ch.tx_freq_hz = float(format_freq_to_hz(tx_f_val, scale=freq_scale))
 
-                        if duplex == '-':
-                            ch.rx_freq_hz = ch.tx_freq_hz - offset_hz
-                            ch.duplex = '-'
-                        elif duplex == '+':
-                            ch.rx_freq_hz = ch.tx_freq_hz + offset_hz
-                            ch.duplex = '+'
-                        elif duplex == 'none':
-                            ch.rx_freq_hz = ch.tx_freq_hz
-                            ch.duplex = 'none'
-                        else:
-                            # Inference
-                            if ch.rx_freq_hz > ch.tx_freq_hz:
-                                duplex = '+'
-                                ch.rx_freq_hz = ch.tx_freq_hz + offset_hz
-                                ch.duplex = '+'
-                            elif ch.rx_freq_hz < ch.tx_freq_hz:
-                                duplex = '-'
-                                ch.rx_freq_hz = ch.tx_freq_hz - offset_hz
-                                ch.duplex = '-'
+                    rx_f_val_raw = row[col_map['rx_freq']] if col_map['rx_freq'] and not pd.isna(row[col_map['rx_freq']]) else 0.0
+                    rx_f_val = float(rx_f_val_raw) if isinstance(rx_f_val_raw, (int, float)) else float(str(rx_f_val_raw).replace('_', ''))
+                    ch.rx_freq_hz = float(format_freq_to_hz(rx_f_val, scale=freq_scale)) if rx_f_val > 0 else 0.0
+
+                    offset_val_raw = row[col_map['offset']] if col_map['offset'] and not pd.isna(row[col_map['offset']]) else 0.0
+                    offset_val = float(offset_val_raw) if isinstance(offset_val_raw, (int, float)) else float(str(offset_val_raw).replace('_', ''))
+                    ch.offset_hz = float(format_freq_to_hz(offset_val, scale=freq_scale))
+                    duplex_val = str(row[col_map['duplex']]) if col_map['duplex'] and not pd.isna(row[col_map['duplex']]) else 'F'
+                    ch.rx_freq_hz, ch.duplex = calculate_rx_freq_and_duplex(
+                        ch.tx_freq_hz, 
+                        ch.offset_hz, 
+                        duplex_val, 
+                        rx_freq_hz=ch.rx_freq_hz
+                    )
+
+
+                    # Sub-audio (CTCSS/DCS)
+                    for side in ['tx', 'rx']:
+                        col_key = f'{side}_sub_audio'
+                        raw_val = row[col_map[col_key]] if col_map[col_key] and not pd.isna(row[col_map[col_key]]) else 0.0
+                        val = float(raw_val) if isinstance(raw_val, (int, float)) else float(str(raw_val).replace('_', ''))
+                        hz = 0.0
+                        if is_btech_uv_format and val >= 1000:
+                            hz = val / 100.0
+                        elif val > 0:
+                            if val < 1000:
+                                ch.extra_fields[f'{side}_dcs_code'] = format_number_to_str(val, precision=0)
                             else:
-                                duplex = 'none'
-                                ch.rx_freq_hz = ch.tx_freq_hz
-                                ch.duplex = 'none'
-                    else:
-                        ch.offset_hz = 0.0
-                        ch.duplex = 'none'
-                        if ch.rx_freq_hz == 0:
-                            ch.rx_freq_hz = ch.tx_freq_hz
-                    
-                    ch.tx_sub_audio_hz = float(format_sub_audio_to_hz(row[col_map['tx_sub_audio']], scale='Hz')) if col_map['tx_sub_audio'] and not pd.isna(row[col_map['tx_sub_audio']]) else 0.0
-                    ch.rx_sub_audio_hz = float(format_sub_audio_to_hz(row[col_map['rx_sub_audio']], scale='Hz')) if col_map['rx_sub_audio'] and not pd.isna(row[col_map['rx_sub_audio']]) else 0.0
-                    
-                    if col_map['rx_freq'] and (pd.isna(row[col_map['rx_freq']]) or row[col_map['rx_freq']] == 0):
-                        ch.rx_sub_audio_hz = ch.tx_sub_audio_hz
+                                hz = val
+                        
+                        if side == 'tx':
+                            ch.tx_sub_audio_hz = hz
+                        else:
+                            ch.rx_sub_audio_hz = hz
+                        
+                        if side == 'rx' and (pd.isna(row[col_map['rx_freq']]) or rx_f_val_raw == 0):
+                            ch.rx_sub_audio_hz = ch.tx_sub_audio_hz
 
+
+                    
                     ch.tx_power = normalize_power(str(row[col_map['tx_power']])) if col_map['tx_power'] and not pd.isna(row[col_map['tx_power']]) else 'M'
                     ch.bandwidth_hz = int(float(row[col_map['bandwidth']])) if col_map['bandwidth'] and not pd.isna(row[col_map['bandwidth']]) else 25000
-                    
+
                     for flag in ['scan', 'talk_around', 'pre_de_emph_bypass', 'sign', 'tx_dis', 'bclo', 'mute']:
                         col_name = col_map.get(flag)
                         if col_name and col_name in row and not pd.isna(row[col_name]):
@@ -166,8 +175,11 @@ class BtechParser(BaseParser):
                     ch.rx_modulation = 'AM' if rx_mod == 'AM' or rx_mod == '1' else 'FM'
                     
                     tx_mod = str(row[col_map['tx_mod']]) if col_map['tx_mod'] and not pd.isna(row[col_map['tx_mod']]) else 'FM'
-                    ch.tx_modulation = 'AM' if tx_mod == 'AM' or tx_mod == '1' else 'FM'
+                    ch.tx_modulation = 'FM' if tx_mod == 'FM' else 'AM'
                     
+                    ch.location = str(row[col_map['location']]) if col_map['location'] and not pd.isna(row[col_map['location']]) else ''
+                    ch.skip = is_true(row[col_map['skip']]) if col_map['skip'] and not pd.isna(row[col_map['skip']]) else False
+
                     channels.append(ch)
                 except Exception as e:
                     print(f"Error parsing Btech row: {e}")
@@ -177,19 +189,19 @@ class BtechParser(BaseParser):
             print(f"Error parsing Btest CSV: {e}")
             return []
 
-    def _parse_channel_append(self, ch_data: Dict[str, Any]) -> Channel:
+    def _parse_channel_append(self, ch_data: Dict[str, Any], freq_scale: str = 'MHz', sub_audio_scale: str = 'Hz') -> Channel:
         ch = Channel()
         ch.name = ch_data.get('n', '')
         tx_f_val = ch_data.get('tf', ch_data.get('f', 0))
         rx_f_val = ch_data.get('rf', ch_data.get('d', 0))
-        ch.tx_freq_hz = float(format_freq_to_hz(tx_f_val, scale='MHz'))
-        ch.rx_freq_hz = float(format_freq_to_hz(rx_f_val, scale='MHz'))
-        ch.tx_sub_audio_hz = float(format_sub_audio_to_hz(ch_data.get('ts', ch_data.get('t', 0)), scale='Hz'))
+        ch.tx_freq_hz = float(format_freq_to_hz(tx_f_val, scale=freq_scale))
+        ch.rx_freq_hz = float(format_freq_to_hz(rx_f_val, scale=freq_scale))
+        ch.tx_sub_audio_hz = float(format_sub_audio_to_hz(ch_data.get('ts', ch_data.get('t', 0)), scale=sub_audio_scale))
         if ch.rx_freq_hz == 0:
             ch.rx_freq_hz = ch.tx_freq_hz
             ch.rx_sub_audio_hz = ch.tx_sub_audio_hz
         else:
-            ch.rx_sub_audio_hz = float(format_sub_audio_to_hz(ch_data.get('dt', 0), scale='Hz'))
+            ch.rx_sub_audio_hz = float(format_sub_audio_to_hz(ch_data.get('dt', 0), scale=sub_audio_scale))
         
         scan_val = ch_data.get('s')
         ch.scan = is_true(scan_val) if scan_val is not None else False
@@ -217,19 +229,23 @@ class BtechGenerator(BaseGenerator):
             channels = channels[:30]
             status_msg = "Truncated"
 
-        header = "BTECH UV\ntitle,tx_freq,rx_freq,duplex,offset,tx_sub_audio,rx_sub_audio,tx_power,bandwidth,scan,talk_around,pre_de_emph_bypass,sign,tx_dis,bclo,mute,rx_modulation,tx_modulation,location,skip"
+        header = (
+            "title,tx_freq,rx_freq,tx_sub_audio(CTCSS=freq/DCS=number),"
+            "rx_sub_audio(CTCSS=freq/DCS=number),tx_power(H/M/L),"
+            "bandwidth(12500/25000),scan(0=OFF/1=ON),talk around(0=OFF/1=ON),"
+            "pre_de_emph_bypass(0=OFF/1=ON),sign(0=OFF/1=ON),tx_dis(0=OFF/1=ON),"
+            "bclo(0=OFF/1=ON),mute(0=OFF/1=ON),rx_modulation(0=FM/1=AM),tx_modulation(0=FM/1=AM)"
+        )
         output = io.StringIO()
         output.write(header + "\n")
 
         for ch in channels:
             row = [
                 ch.name,
-                format_number_to_str(format_freq_to_mhz(ch.tx_freq_hz, scale='Hz')),
-                format_number_to_str(format_freq_to_mhz(ch.rx_freq_hz, scale='Hz')),
-                ch.duplex,
-                format_number_to_str(format_freq_to_mhz(ch.offset_hz, scale='Hz')),
-                format_number_to_str(ch.tx_sub_audio_hz),
-                format_number_to_str(ch.rx_sub_audio_hz),
+                format_number_to_str(ch.tx_freq_hz),
+                format_number_to_str(ch.rx_freq_hz),
+                (str(int(ch.tx_sub_audio_hz)) if ch.tx_sub_audio_hz > 0 else ch.extra_fields.get('tx_dcs_code', '0')),
+                (str(int(ch.rx_sub_audio_hz)) if ch.rx_sub_audio_hz > 0 else ch.extra_fields.get('rx_dcs_code', '0')),
                 format_power_to_btech(ch.tx_power),
                 format_number_to_str(ch.bandwidth_hz),
                 '1' if ch.scan else '0',
@@ -240,10 +256,9 @@ class BtechGenerator(BaseGenerator):
                 '1' if ch.bclo else '0',
                 '1' if ch.mute else '0',
                 'FM' if ch.rx_modulation == 'FM' else 'AM',
-                'FM' if ch.tx_modulation == 'FM' else 'AM',
-                ch.location,
-                '1' if ch.skip else '0'
+                'FM' if ch.tx_modulation == 'FM' else 'AM'
             ]
             output.write(",".join(map(str, row)) + "\n")
 
         return output.getvalue().strip(), status_msg
+

@@ -7,8 +7,8 @@ from .models import Channel
 from .utils import (
     format_freq_to_hz, 
     format_sub_audio_to_hz, 
+    format_sub_audio_to_units,
     format_freq_to_mhz, 
-    format_sub_audio_to_mhz, 
     normalize_power
 )
 
@@ -23,7 +23,7 @@ class ClipboardParser(BaseParser):
             return []
         
         content = content.strip()
-
+        
         # Try to find the start of JSON content
         json_start = -1
         for char in ['{', '[']:
@@ -51,11 +51,18 @@ class ClipboardParser(BaseParser):
                     ch_dict = ch.copy()
                     
                     name = ch_dict.get('name', ch_dict.get('n', ''))
+                     # JSON format uses MHz for frequencies
                     rx_freq_hz = format_freq_to_hz(ch_dict.get('rx_freq_hz', ch_dict.get('rf', 0)), scale='MHz')
                     tx_freq_hz = format_freq_to_hz(ch_dict.get('tx_freq_hz', ch_dict.get('tf', 0)), scale='MHz')
+                    
+                    # JSON format uses Hz for sub-audio
                     tx_sub_audio_hz = format_sub_audio_to_hz(ch_dict.get('tx_sub_audio_hz', ch_dict.get('ts', 0)), scale='Hz')
                     rx_sub_audio_hz = format_sub_audio_to_hz(ch_dict.get('rx_sub_audio_hz', ch_dict.get('rs', 0)), scale='Hz')
-                    scan = str(ch_dict.get('scan', ch_dict.get('s', '0'))).strip() in ['1', 'true', 'True']
+                    
+                    scan_val = str(ch_dict.get('scan', ch_dict.get('s', '0')))
+
+                    scan = scan_val.strip() in ['1', 'true', 'True', 'trans']
+                    
                     tx_power = normalize_power(ch_dict.get('tx_power', ch_dict.get('p', 'M')))
 
                     channels.append(Channel(
@@ -69,7 +76,6 @@ class ClipboardParser(BaseParser):
                     ))
                 return channels
 
-
             except (json.JSONDecodeError, ValueError, KeyError):
                 pass
 
@@ -77,23 +83,28 @@ class ClipboardParser(BaseParser):
         try:
             prefix_indicators = [
                 'Copy this text and start BTECH UV',
-                'Copy this text and start BWE/BTECH JSON',
+                'Copy this->this text and start BWE/BTECH JSON',
                 'BTECH UV'
             ]
             for prefix in prefix_indicators:
                 if content.startswith(prefix):
-                    content = content[len(prefix):]
+                    content = content[len(prefix):].lstrip()
                     break
             
             df = pd.read_csv(io.StringIO(content))
             channels = []
             for _, row in df.iterrows():
                 name = str(row.get('name', ''))
-                rx_freq_hz = format_freq_to_hz(row.get('rx_freq_hz', 0), scale='MHz')
-                tx_freq_hz = format_freq_to_hz(row.get('tx_freq_hz', 0), scale='MHz')
+                # CSV format uses Hz for frequencies
+                rx_freq_hz = format_freq_to_hz(row.get('rx_freq_hz', 0), scale='Hz')
+                tx_freq_hz = format_freq_to_hz(row.get('tx_freq_hz', 0), scale='Hz')
+                # CSV format uses Hz for sub-audio
                 tx_sub_audio_hz = format_sub_audio_to_hz(row.get('tx_sub_audio_hz', 0), scale='Hz')
                 rx_sub_audio_hz = format_sub_audio_to_hz(row.get('rx_sub_audio_hz', 0), scale='Hz')
-                scan = str(row.get('scan', '0')).strip() in ['1', 'true', 'True']
+                
+                scan_val = str(row.get('scan', '0'))
+                scan = scan_val.strip() in ['1', 'true', 'True']
+                
                 tx_power = normalize_power(row.get('tx_power', 'M'))
 
                 channels.append(Channel(
@@ -128,17 +139,19 @@ class ClipboardGenerator(BaseGenerator):
             chs = []
             for ch in channels:
                 chs.append({
-                     "n": ch.name,
-                     "rf": format_freq_to_mhz(ch.rx_freq_hz, scale='Hz'),
-                     "tf": format_freq_to_mhz(ch.tx_freq_hz, scale='Hz'),
-                     "ts": ch.tx_sub_audio_hz,
-                     "rs": ch.rx_sub_audio_hz,
-                    "s": 1 if ch.scan else 0,
+                                     "n": ch.name,
+                                     "rf": format_freq_to_mhz(ch.rx_freq_hz, scale='Hz'),
+                                     "tf": format_freq_to_mhz(ch.tx_freq_hz, scale='Hz'),
+                                     "ts": format_sub_audio_to_units(ch.tx_sub_audio_hz, unit_scale='Hz'),
+                                     "rs": format_sub_audio_to_units(ch.rx_sub_audio_hz, unit_scale='Hz'),
+                                     "s": 1 if ch.scan else 0,
+
                     "id": 0, # Dummy
-                    "p": "0" # Dummy
+                    "p": ch.tx_power.replace('W', '') if 'W' in ch.tx_power else ch.tx_power
                 })
             
             data = {"chs": chs}
+            # Use the required prefix for BTECH UV parsing
             return f'Copy this text and start BTECH UV{json.dumps(data)}', status_msg
         
         elif self.format == 'csv':

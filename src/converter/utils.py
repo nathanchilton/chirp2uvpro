@@ -34,11 +34,7 @@ def format_freq_to_hz(freq_val, scale='MHz'):
         elif scale == 'Hz':
             return round(f, 3)
         else:
-            # Fallback to original logic if scale is unknown
-            if f < 1000: # Assumes MHz
-                return round(f * 1_000_000, 3)
-            else: # Assumes Hz
-                return round(f, 3)
+            raise ValueError(f"Unknown scale: {scale}")
     except (ValueError, TypeError):
         return 0.0
 
@@ -62,10 +58,29 @@ def format_sub_audio_to_hz(sub_audio_val, scale='Hz'):
         elif scale == 'MHz':
             return round(f * 1_000_000, 3)
         else:
-            # Fallback to original logic if scale is unknown
-            if f < 1.0: # Assumes kHz
-                return round(f * 1000, 3)
-            return round(f, 3)
+            raise ValueError(f"Unknown scale: {scale}")
+    except (ValueError, TypeError):
+        return 0.0
+
+def format_sub_audio_to_units(sub_audio_hz, unit_scale='0.01Hz'):
+    """Converts sub-audio frequency in Hz to units (e.g., 0.01Hz units)."""
+    try:
+        if pd.isna(sub_audio_hz):
+            return 0.0
+        f = float(sub_audio_hz)
+        if f == 0:
+            return 0.0
+
+        if unit_scale == '0.01Hz':
+            return int(round(f / 0.01))
+        elif unit_scale == '0.1Hz':
+            return int(round(f / 0.1))
+        elif unit_scale == 'kHz':
+            return int(round(f / 1000))
+        elif unit_scale == 'Hz':
+            return int(round(f))
+        else:
+            raise ValueError(f"Unknown unit scale: {unit_scale}")
     except (ValueError, TypeError):
         return 0.0
 
@@ -85,7 +100,7 @@ def format_freq_to_mhz(freq_val, scale='Hz'):
         elif scale == 'Hz':
             return f / 1_000_000
         else:
-            return f / 1_000_000 # Default fallback
+            raise ValueError(f"Unknown scale: {scale}")
     except (ValueError, TypeError):
         return 0.0
 
@@ -107,7 +122,7 @@ def format_sub_audio_to_mhz(sub_audio_val, scale='Hz'):
         elif scale == 'MHz':
             return f
         else:
-            return f / 1_000_000 # Default fallback
+            raise ValueError(f"Unknown scale: {scale}")
     except (ValueError, TypeError):
         return 0.0
 
@@ -140,15 +155,25 @@ def format_power_to_chirp(p_str):
     p_map = {"H": "4.0W", "M": "2.5W", "L": "1.0W", "4.0W": "4.0W", "2.5W": "2.5W", "1.0W": "1.0W"}
     return p_map.get(p_str, p_str)
 
-def calculate_rx_freq_and_duplex(tx_freq_hz: float, offset_hz: float, duplex: str) -> tuple[float, str]:
-    """Calculates rx_freq_hz and duplex based on tx_freq_hz, offset_hz, and duplex string."""
+def calculate_rx_freq_and_duplex(tx_freq_hz: float, offset_hz: float, duplex: str, rx_freq_hz: float = 0.0) -> tuple[float, str]:
+    """Calculates rx_freq_rad and duplex based on tx_freq_hz, offset_hz, and duplex string."""
+    duplex = str(duplex).lower().strip()
     if duplex == '-':
         return tx_freq_hz - offset_hz, '-'
     elif duplex == '+':
         return tx_freq_hz + offset_hz, '+'
     elif duplex == 'none':
+        if rx_freq_hz > 0 and rx_freq_hz != tx_freq_hz:
+            if rx_freq_hz > tx_freq_hz:
+                return rx_freq_hz, '+'
+            else:
+                return rx_freq_hz, '-'
         return tx_freq_hz, 'none'
     else:
         # Inference
-        # We don't know rx_freq_hz yet, so we use tx_freq_hz as a base for inference
-        return tx_freq_hz, 'none' # Default fallback
+        if rx_freq_hz > 0:
+            if rx_freq_hz > tx_freq_hz:
+                return rx_freq_hz, '+'
+            elif rx_freq_hz < tx_freq_hz:
+                return rx_freq_hz, '-'
+        return tx_freq_hz, 'none'
