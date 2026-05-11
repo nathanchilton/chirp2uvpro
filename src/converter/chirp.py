@@ -9,7 +9,8 @@ from .utils import (
     format_sub_audio_to_hz,
     format_power_to_chirp,
     normalize_power,
-    is_true
+    is_true,
+    calculate_rx_freq_and_duplex
 )
 
 class ChirpParser(BaseParser):
@@ -19,20 +20,15 @@ class ChirpParser(BaseParser):
         if not content:
             return []
         
-        # Strip known prefixes
-        prefixes = ["BWE/BCMS JSON", "BWE/BTECH CSV", "B1TECH UV", "BTECH UV", "BWE/BCR JSON", "BWE/BTECH CSV"]
-        freq_scale = 'MHz'
-        for prefix in prefixes:
-            if content.startswith(prefix):
-                content = content[len(prefix):].lstrip()
-                if "BTECH" in prefix or "B1TECH" in prefix:
-                    freq_scale = 'Hz'
-                break
-        
         try:
             df = pd.read_csv(io.StringIO(content))
             if df.empty:
                 return []
+
+            # Robust identification: check headers for BTECH format
+            freq_scale = 'MHz'
+            if 'tx_freq' in df.columns:
+                freq_scale = 'Hz'
             
             channels = []
             for _, row in df.iterrows():
@@ -56,14 +52,17 @@ class ChirpParser(BaseParser):
                 duplex = str(get_val(['Duplex'], 'none')).strip()
                 offset_val = get_val(['Offset'], 0)
                 offset_hz = float(format_freq_to_hz(offset_val, scale=freq_scale))
+                ch.offset_hz = offset_hz
                 
-                if rx_f_val_hz > 0:
-                    ch.rx_freq_hz = rx_f_val_hz
-                else:
-                    if duplex == '-':
-                        ch.rx_freq_hz = ch.tx_freq_hz - offset_hz
-                    elif duplex:
-                        pass
+                ch.rx_freq_hz, ch.duplex = calculate_rx_freq_and_duplex(
+                    ch.tx_freq_hz,
+                    offset_hz,
+                    duplex,
+                    rx_freq_hz=rx_f_val_hz
+                )
+
+
+
 
 
 
@@ -134,15 +133,15 @@ class ChirpGenerator(BaseGenerator):
             tx_sub = ch.tx_sub_audio_hz
             if tx_sub > 0:
                 ch_row['Tone'] = 'Tone'
-                ch_row['rToneFreq'] = format_sub_audio_to_hz(tx_sub, scale='Hz') / 1_000_000
+                ch_row['rToneFreq'] = format_sub_audio_to_hz(tx_sub, scale='Hz')
             else:
-                ch_row['rToneFreq'] = 0.0
+                ch_row['rToneF'] = 0.0
             
             rx_sub = ch.rx_sub_audio_hz
             if rx_sub > 0:
-                ch_row['cToneFreq'] = format_sub_audio_to_hz(rx_sub, scale='Hz') / 1_000_000
+                ch_row['cToneF'] = format_sub_audio_to_hz(rx_sub, scale='Hz')
             else:
-                ch_row['cToneFreq'] = 0.0
+                ch_row['cToneF'] = 0.0
 
             
             ch_row['Mode'] = 'FM' if ch.rx_modulation == 'FM' else 'AM'

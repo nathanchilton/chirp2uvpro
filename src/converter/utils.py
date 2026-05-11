@@ -7,10 +7,12 @@ def is_true(val):
     except (ValueError, TypeError):
         return str(val).strip() == '1'
 
-def format_number_to_str(val):
+def format_number_to_str(val, precision=None):
     """Converts a number to a string, removing .0 if it is an integer."""
     try:
         f = float(val)
+        if precision is not None:
+            return f"{f:.{precision}f}"
         if f.is_integer():
             return f"{int(f)}"
         else:
@@ -27,14 +29,18 @@ def format_freq_to_hz(freq_val, scale='MHz'):
         if f == 0:
             return 0.0
         
-        if scale == 'MHz':
-            return round(f * 1_000_000, 3)
+        if isinstance(scale, (int, float)):
+            multiplier = scale
+        elif scale == 'MHz':
+            multiplier = 1_000_000
         elif scale == 'kHz':
-            return round(f * 1_000, 3)
+            multiplier = 1_000
         elif scale == 'Hz':
-            return round(f, 3)
+            multiplier = 1
         else:
             raise ValueError(f"Unknown scale: {scale}")
+            
+        return round(f * multiplier, 3)
     except (ValueError, TypeError):
         return 0.0
 
@@ -47,18 +53,22 @@ def format_sub_audio_to_hz(sub_audio_val, scale='Hz'):
         if f == 0:
             return 0.0
         
-        if scale == '0.01Hz':
-            return round(f * 0.01, 3)
-        elif scale == '0.1Hz':
-            return round(f * 0.1, 3)
-        elif scale == 'kHz':
-            return round(f * 1000, 3)
-        elif scale == 'Hz':
-            return round(f, 3)
+        if isinstance(scale, (int, float)):
+            multiplier = scale
         elif scale == 'MHz':
-            return round(f * 1_000_000, 3)
+            multiplier = 1_000_000
+        elif scale == 'kHz':
+            multiplier = 1_000
+        elif scale == 'Hz':
+            multiplier = 1
+        elif scale == '0.1Hz':
+            multiplier = 0.1
+        elif scale == '0.01Hz':
+            multiplier = 0.01
         else:
             raise ValueError(f"Unknown scale: {scale}")
+            
+        return round(f * multiplier, 3)
     except (ValueError, TypeError):
         return 0.0
 
@@ -70,61 +80,33 @@ def format_sub_audio_to_units(sub_audio_hz, unit_scale='0.01Hz'):
         f = float(sub_audio_hz)
         if f == 0:
             return 0.0
-
-        if unit_scale == '0.01Hz':
-            return int(round(f / 0.01))
-        elif unit_scale == '0.1Hz':
-            return int(round(f / 0.1))
+        
+        if isinstance(unit_scale, (int, float)):
+            multiplier = unit_scale
+        elif unit_scale == 'MHz':
+            multiplier = 1_000_000
         elif unit_scale == 'kHz':
-            return int(round(f / 1000))
+            multiplier = 1_000
         elif unit_scale == 'Hz':
-            return int(round(f))
+            multiplier = 1
+        elif unit_scale == '0.1Hz':
+            multiplier = 0.1
+        elif unit_scale == '0.01Hz':
+            multiplier = 0.01
         else:
             raise ValueError(f"Unknown unit scale: {unit_scale}")
+            
+        return int(round(f / multiplier))
     except (ValueError, TypeError):
         return 0.0
 
 def format_freq_to_mhz(freq_val, scale='Hz'):
     """Converts frequency to MHz based on provided scale."""
-    try:
-        if pd.isna(freq_val):
-            return 0.0
-        f = float(freq_val)
-        if f == 0:
-            return 0.0
-        
-        if scale == 'MHz':
-            return f
-        elif scale == 'kHz':
-            return f / 1_000
-        elif scale == 'Hz':
-            return f / 1_000_000
-        else:
-            raise ValueError(f"Unknown scale: {scale}")
-    except (ValueError, TypeError):
-        return 0.0
+    return format_freq_to_hz(freq_val, scale=scale) / 1_000_000
 
 def format_sub_audio_to_mhz(sub_audio_val, scale='Hz'):
     """Converts sub-audio frequency to MHz based on provided scale."""
-    try:
-        if pd.isna(sub_audio_val):
-            return 0.0
-        f = float(sub_audio_val)
-        if f == 0:
-            return 0.0
-        
-        if scale == '0.1Hz':
-            return (f * 0.1) / 1_000_000
-        elif scale == 'kHz':
-            return (f * 1000) / 1_000_000
-        elif scale == 'Hz':
-            return f / 1_000_000
-        elif scale == 'MHz':
-            return f
-        else:
-            raise ValueError(f"Unknown scale: {scale}")
-    except (ValueError, TypeError):
-        return 0.0
+    return format_sub_audio_to_hz(sub_audio_val, scale=scale) / 1_000_000
 
 def normalize_power(p_str):
     """Normalizes power string to 'H', 'M', or 'L'."""
@@ -162,7 +144,12 @@ def calculate_rx_freq_and_duplex(tx_freq_hz: float, offset_hz: float, duplex: st
         return tx_freq_hz - offset_hz, '-'
     elif duplex == '+':
         return tx_freq_hz + offset_hz, '+'
-    elif duplex == 'none':
+    elif duplex == 'none' or duplex == '':
+        if offset_hz != 0:
+            if offset_hz > 0:
+                return tx_freq_hz + offset_hz, '+'
+            else:
+                return tx_freq_hz + offset_hz, '-'
         if rx_freq_hz > 0 and rx_freq_hz != tx_freq_hz:
             if rx_freq_hz > tx_freq_hz:
                 return rx_freq_hz, '+'

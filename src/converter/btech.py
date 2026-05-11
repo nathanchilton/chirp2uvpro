@@ -230,7 +230,7 @@ class BtechGenerator(BaseGenerator):
             status_msg = "Truncated"
 
         header = (
-            "title,tx_freq,rx_freq,tx_sub_audio(CTCSS=freq/DCS=number),"
+            "title,location,tx_freq,rx_freq,tx_sub_audio(CTCSS=freq/DCS=number),"
             "rx_sub_audio(CTCSS=freq/DCS=number),tx_power(H/M/L),"
             "bandwidth(12500/25000),scan(0=OFF/1=ON),talk around(0=OFF/1=ON),"
             "pre_de_emph_bypass(0=OFF/1=ON),sign(0=OFF/1=ON),tx_dis(0=OFF/1=ON),"
@@ -242,6 +242,7 @@ class BtechGenerator(BaseGenerator):
         for ch in channels:
             row = [
                 ch.name,
+                ch.location,
                 format_number_to_str(ch.tx_freq_hz),
                 format_number_to_str(ch.rx_freq_hz),
                 (str(int(ch.tx_sub_audio_hz)) if ch.tx_sub_audio_hz > 0 else ch.extra_fields.get('tx_dcs_code', '0')),
@@ -259,6 +260,7 @@ class BtechGenerator(BaseGenerator):
                 'FM' if ch.tx_modulation == 'FM' else 'AM'
             ]
             output.write(",".join(map(str, row)) + "\n")
+
 
         return output.getvalue().strip(), status_msg
 
