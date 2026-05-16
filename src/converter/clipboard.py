@@ -67,10 +67,24 @@ class ClipboardParser(BaseParser):
                     # JSON format uses MHz for frequencies
                     rx_freq_hz = format_freq_to_hz(ch_dict.get('rx_freq_hz', ch_dict.get('rf', 0)), scale='MHz')
                     tx_freq_hz = format_freq_to_hz(ch_dict.get('tx_freq_hz', ch_dict.get('tf', 0)), scale='MHz')
-                    
                     # JSON format uses 0.01Hz units for sub-audio
-                    tx_sub_audio_hz = format_sub_audio_to_hz(ch_dict.get('tx_sub_audio_hz', ch_dict.get('ts', 0)), scale='0.01Hz')
-                    rx_sub_audio_hz = format_sub_audio_to_hz(ch_dict.get('rx_sub_audio_hz', ch_dict.get('rs', 0)), scale='0.01Hz')
+                    # We must handle the case where sub-audio is CTCSS (Hz * 100) vs DCS (Hz)
+                    # If the value is high (e.g., > 2000), it's likely CTCSS frequency * 100
+                    tx_sub_raw = ch_dict.get('tx_sub_audio_hz', ch_dict.get('ts', 0))
+                    rx_sub_raw = ch_dict.get('rx_sub_audio_hz', ch_dict.get('rs', 0))
+                    
+                    def parse_sub_audio(val):
+                        # If it's a number, check if it looks like CTCSS (scaled by 100)
+                        try:
+                            f_val = float(val)
+                            if f_val > 2000: # Heuristic: CTCSS tones are < 2000Hz, but scaled by 100
+                                return format_sub_audio_to_hz(f_val, scale='0.01Hz')
+                            return format_sub_audio_to_hz(f_val, scale='Hz')
+                        except:
+                            return 0.0
+
+                    tx_sub_audio_hz = parse_sub_audio(tx_sub_raw)
+                    rx_sub_audio_hz = parse_sub_audio(rx_sub_raw)
                     
                     scan_val = str(ch_dict.get('scan', ch_dict.get('s', '0')))
                     
@@ -137,8 +151,18 @@ class ClipboardParser(BaseParser):
 
                 tx_sub_val_raw = row[col_map['tx_sub_audio']] if col_map['tx_sub_audio'] and not pd.isna(row[col_map['tx_sub_audio']]) else 0.0
                 rx_sub_val_raw = row[col_map['rx_sub_audio']] if col_map['rx_sub_audio'] and not pd.isna(row[col_map['rx_sub_audio']]) else 0.0
-                tx_sub_hz = format_sub_audio_to_hz(tx_sub_val_raw, scale='Hz')
-                rx_sub_hz = format_sub_audio_to_hz(rx_sub_val_raw, scale='Hz')
+                
+                def parse_sub_audio_csv(val):
+                    try:
+                        f_val = float(val)
+                        if f_val > 2000: # Heuristic: CTCSS tones are < 2000Hz, but scaled by 100
+                            return format_sub_audio_to_hz(f_val, scale='0.01Hz')
+                        return format_sub_audio_to_hz(f_val, scale='Hz')
+                    except:
+                        return 0.0
+
+                tx_sub_hz = parse_sub_audio_csv(tx_sub_val_raw)
+                rx_sub_hz = parse_sub_audio_csv(rx_sub_val_raw)
 
                 scan_val = str(row[col_map['scan']]) if col_map['scan'] and not pd.isna(row[col_map['scan']]) else '0'
                 scan = scan_val.strip() in ['1', 'true', 'True']
@@ -197,7 +221,7 @@ class ClipboardGenerator(BaseGenerator):
             # Generate CSV format
             output = "Copy this text and start BTECH UVname,tx_freq_hz,rx_freq_hz,tx_sub_audio_hz,rx_sub_audio_hz\n"
             for ch in channels:
-                output += f"{ch.name},{format_freq_to_mhz(ch.tx_freq_hz, scale='Hz')},{format_freq_to_mhz(ch.rx_freq_hz, scale='Hz')},{ch.tx_sub_audio_hz},{ch.rx_sub_audio_hz}\n"
+                output += f"{ch.name},{format_freq_to_hz(ch.tx_freq_hz, scale='Hz')},{format_freq_to_hz(ch.rx_freq_hz, scale='Hz')},{ch.tx_sub_audio_hz},{ch.rx_sub_audio_hz}\n"
             return output.strip(), status_msg
         
         return "", None
