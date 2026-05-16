@@ -164,9 +164,10 @@ def import_repeaters():
         from converter.logic import detect_format
         from converter.parsers import ChirpParser, BtechParser, ClipboardParser, ApiImportParser
         from converter.models import Channel
-        from converter.parsers import BtechGenerator
+        from converter.parsers import BtechGenerator, ClipboardGenerator, ChirpGenerator
         
         channels = []
+        fmt = 'auto'
         if current_content:
             fmt = detect_format(current_content)
             if fmt == 'chirp':
@@ -182,7 +183,7 @@ def import_repeaters():
                     channels = BtechParser().parse(current_content)
                 except:
                     channels = []
-        
+
         if not channels:
             # No existing channels to pin, so we just import the new ones as a new BTECH list
             new_channels = []
@@ -191,7 +192,7 @@ def import_repeaters():
                 ch.name = nr.get('n', '')
                 ch.rx_freq_hz = format_freq_to_hz(nr.get('rf', 0))
                 ch.tx_freq_hz = format_freq_to_hz(nr.get('tf', 0))
-                ch.rx_sub_audio_hz = format_sub_audio_to_hz(nr.get('s', 0)) # Wait, checking key name in mock
+                ch.rx_sub_audio_hz = format_sub_audio_to_hz(nr.get('s', 0))
                 ch.tx_sub_audio_hz = format_sub_audio_to_hz(nr.get('ts', 0))
                 new_channels.append(ch)
             
@@ -204,6 +205,33 @@ def import_repeaters():
                 "warning": error
             }), 200
 
+        if fmt in ['chirp', 'btech', 'api-import']:
+            # Append and return update_text
+            for nr in new_repeaters_raw:
+                ch = Channel()
+                ch.name = nr.get('n', '')
+                ch.rx_freq_hz = format_freq_to_hz(nr.get('rf', 0))
+                ch.tx_freq_hz = format_freq_to_hz(nr.get('tf', 0))
+                ch.rx_sub_audio_hz = format_sub_audio_to_hz(nr.get('rs', 0))
+                ch.tx_sub_audio_hz = format_sub_audio_to_hz(nr.get('ts', 0))
+                channels.append(ch)
+            
+            if fmt == 'chirp':
+                output_content, error = ChirpGenerator().generate(channels)
+            elif fmt == 'btech':
+                output_content, error = BtechGenerator().generate(channels)
+            else: # api-import
+                output_content, error = BtechGenerator().generate(channels)
+                
+            return jsonify({
+                "status": "success",
+                "action": "update_text",
+                "content": output_content,
+                "repeaters": new_repeaters_raw,
+                "warning": error
+            }), 200
+
+        # If clipboard, we use the pinning UI
         existing_channels_dicts = []
         for ch in channels:
             existing_channels_dicts.append({

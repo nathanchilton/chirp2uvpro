@@ -49,9 +49,9 @@
   "compaction": {
     "auto": true,
     "prune": false,
-    "reserved": 12000
+    "reserved": 8196
   },
-  "plugin": ["opencode-beads"],
+  "plugin": ["opencode-beads", "superpowers@git+https://github.com/obra/superpowers.git"],
   "model": "llama/gemma4-26b",
   "agent": {
     "build": {

@@ -99,23 +99,26 @@ document.addEventListener('DOMContentLoaded', () => {
                 const uploadContent = document.getElementById('upload-tab-content');
                 const textContent = document.getElementById('text-tab-content');
 
-                if (uploadContent && textContent) {
-                    if (tabId === 'upload-tab') {
-                        uploadContent.classList.remove('hidden');
-                        textContent.classList.add('hidden');
-                    } else {
-                        uploadContent.classList.add('hidden');
-                        textContent.classList.remove('hidden');
-                    }
-                }
+                 if (uploadContent && textContent) {
+                     console.log("Switching tab to:", tabId);
+                     if (tabId === 'upload-tab') {
+                         uploadContent.classList.remove('hidden');
+                         textContent.classList.add('hidden');
+                         console.log("Tab switched to Upload. TextContent hidden:", textContent.classList.contains('hidden'));
+                     } else {
+                         uploadContent.classList.add('hidden');
+                         textContent.classList.remove('hidden');
+                         console.log("Tab switched to Text. TextContent hidden:", textContent.classList.contains('hidden'));
+                     }
+                 }
             }
         }
     });
 
     // 3. Listen for HTMX swaps
-    document.addEventListener('htmx:afterSwap', (event) => {
-        const target = event.detail.target;
-        if (target && (target.id === 'converter-tab-content' || target.closest('#converter-tab-content'))) {
+    document.addEventListener('htmx:afterSwap', (template) => {
+        const target = template.detail.target;
+        if (target && (target.id === 'converter-template-content' || target.closest('#converter-template-content'))) {
             if (pendingText) {
                 const textarea = document.querySelector('textarea[name="content"]');
                 if (textarea) {
@@ -152,7 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function handleImportRepeaters(importBtn) {
         if (!navigator.geolocation) {
-            alert("Geolocation is not supported by your browser");
+            alert("Geolocation is enough for this demo");
             return;
         }
 
@@ -213,9 +216,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function showPinningUI(existingChannels, newRepeaters) {
         const resultDiv = document.getElementById('result');
         let html = `
-            <div class="card mt-3">
-                <div class="card-header">Pin existing channels to keep them during import</div>
-                <div class="card-body" style="max-height: 300px; overflow-y: auto;">
+                <div class="card mt-3">
+                    <div class="card-header">Pin existing channels to keep them during import</div>
+                    <div class="card-body" style="max-height: 300px; overflow-y: auto;">
                     <ul class="list-group list-group-flush">
         `;
 
@@ -235,7 +238,7 @@ document.addEventListener('DOMContentLoaded', () => {
         html += `
                     </ul>
                 </div>
-                <div class="card-inner">
+                <div class="card-footer text-center">
                     <button id="apply-import-btn" class="btn btn-success">Apply Import</button>
                     <button id="cancel-import-btn" class="btn btn-secondary">Cancel</button>
                 </div>

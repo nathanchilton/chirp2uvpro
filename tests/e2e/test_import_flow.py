@@ -82,7 +82,7 @@ def test_import_repeaters_with_pinning(page: Page):
     
     # 3. Pre-fill the textarea with some existing channels
     page.click("#text-tab")
-    existing_content = 'Copy this text and start BTECH UV{"n":"Existing","rf":146.0,"tf":146.0,"ts":131.8,"rs":131.8,"id":1,"p":0}'
+    existing_content = 'Copy this text and start BTECH UV{"n":"Existing","chs":[{"n":"Existing","rf":146.0,"tf":146.0,"ts":131.8,"rs":131.8,"id":1,"p":0}]}'
     page.fill('textarea[name="content"]', existing_content)
     
     # 4. Click the Import Repeaters button
@@ -99,11 +99,16 @@ def test_import_repeaters_with_pinning(page: Page):
     # 7. Click "Apply Import"
     page.click("#apply-import-btn")
     
-    # 7. Verify that the textarea now contains BOTH the existing and the new channels
+    # 8. Wait for the textarea to be updated with the merged content (async fetch + alert)
+    # The JS handler does: textarea.value = data.content; alert("Import applied successfully!");
+    # Wait for the mock repeater data to appear in the textarea
     textarea_locator = page.locator('textarea[name="content"]')
+    page.wait_for_function(
+        'document.querySelector(\'textarea[name="content"]\').value.includes("Repeater")',
+        timeout=10000
+    )
+    
+    # 9. Verify that the textarea now contains BOTH the existing and the new channels
     content = textarea_locator.input_value()
     assert "Existing" in content
-    # And it should also contain the new ones (we don't know exactly what they are but they'll be there)
-    # We can check if the length of 'chs' array has increased or if it contains something else.
-    # Since we don't know the exact mock data, we'll just check that it's not just the old content.
     assert len(content) > len(existing_content)

@@ -12,21 +12,27 @@ def detect_format(content: str) -> str:
     if not content:
         return 'auto'
     
-    # Try Chirp (most specific)
+    # Check for Clipboard format by unique prefix (most specific identifier)
+    trimmed = content.strip()
+    CLIPBOARD_PREFIX = 'Copy this text and start BTECH UV'
+    if trimmed.startswith(CLIPBOARD_PREFIX):
+        return 'clipboard'
+    
+    # Try Chirp (most specific CSV format)
     try:
         if ChirpParser().parse(content):
             return 'chirp'
     except:
         pass
 
-    # Try Btech
+    # Try Btech (handles CSV and JSON formats)
     try:
         if BtechParser().parse(content):
             return 'btech'
     except:
         pass
 
-    # Try Clipboard (most general)
+    # Try Clipboard parser as general fallback
     try:
         if ClipboardParser().parse(content):
             return 'clipboard'
