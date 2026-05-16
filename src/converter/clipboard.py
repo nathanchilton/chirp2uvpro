@@ -77,7 +77,7 @@ class ClipboardParser(BaseParser):
                         # If it's a number, check if it looks like CTCSS (scaled by 100)
                         try:
                             f_val = float(val)
-                            if f_val > 2000: # Heuristic: CTCSS tones are < 2000Hz, but scaled by 100
+                            if f_val > 1000: # Heuristic: CTCSS tones are < 2000Hz, but scaled by 100
                                 return format_sub_audio_to_hz(f_val, scale='0.01Hz')
                             return format_sub_audio_to_hz(f_val, scale='Hz')
                         except:
@@ -109,7 +109,8 @@ class ClipboardParser(BaseParser):
         # If not JSON, try CSV
         try:
             prefix_indicators = [
-                'Copy this text and start BTECH UV'
+                'Copy this text and start BTECH UV',
+                'BTECH UV'
             ]
             freq_scale = 'MHz' # Default for CSV if not specified
             for prefix in prefix_indicators:
@@ -155,7 +156,7 @@ class ClipboardParser(BaseParser):
                 def parse_sub_audio_csv(val):
                     try:
                         f_val = float(val)
-                        if f_val > 2000: # Heuristic: CTCSS tones are < 2000Hz, but scaled by 100
+                        if f_val > 1000: # Heuristic: CTCSS tones are < 2000Hz, but scaled by 100
                             return format_sub_audio_to_hz(f_val, scale='0.01Hz')
                         return format_sub_audio_to_hz(f_val, scale='Hz')
                     except:

@@ -9,7 +9,7 @@ def test_clipboard_parser_with_json_prefix():
     assert channels[0].name == 'N5RCA'
     assert channels[0].rx_freq_hz == 146740000.0
     assert channels[0].tx_freq_hz == 146140000.0
-    assert channels[0].tx_sub_audio_hz == 13180.0
+    assert channels[0].tx_sub_audio_hz == 131.8
     assert channels[0].scan is True
     assert channels[0].tx_power == '0'
 
@@ -19,3 +19,5 @@ def test_clipboard_parser_with_csv_prefix():
     channels = parser.parse(content)
     assert len(channels) == 1
     assert channels[0].name == 'Test'
+    assert channels[0].tx_freq_hz == 146520000.0
+    assert channels[0].rx_freq_hz == 146520000.0

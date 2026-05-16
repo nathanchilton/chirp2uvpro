@@ -127,21 +127,32 @@ class ChirpGenerator(BaseGenerator):
             
             tx_f_hz = ch.tx_freq_hz
             ch_row['Frequency'] = format_freq_to_mhz(tx_f_hz, scale='Hz')
-            ch_row['Duplex'] = ch.duplex
-            ch_row['Offset'] = format_freq_to_mhz(ch.offset_hz, scale='Hz')
+            
+            if ch.rx_freq_hz != ch.tx_freq_hz:
+                if ch.rx_freq_hz > ch.tx_freq_hz:
+                    ch_row['Duplex'] = '+'
+                    ch_row['Offset'] = format_freq_to_mhz(ch.rx_freq_hz - ch.tx_freq_hz, scale='Hz')
+                else:
+                    ch_row['Duplex'] = '-'
+                    ch_row['Offset'] = format_freq_to_mhz(ch.tx_freq_hz - ch.rx_freq_hz, scale='Hz')
+            else:
+                ch_row['Duplex'] = ch.duplex
+                ch_row['Offset'] = format_freq_to_mhz(ch.offset_hz, scale='Hz')
+
+
             
             tx_sub = ch.tx_sub_audio_hz
             if tx_sub > 0:
                 ch_row['Tone'] = 'Tone'
                 ch_row['rToneFreq'] = format_sub_audio_to_hz(tx_sub, scale='Hz')
             else:
-                ch_row['rToneF'] = 0.0
+                ch_row['rToneFreq'] = 0.0
             
             rx_sub = ch.rx_sub_audio_hz
             if rx_sub > 0:
-                ch_row['cToneF'] = format_sub_audio_to_hz(rx_sub, scale='Hz')
+                ch_row['cToneFreq'] = format_sub_audio_to_hz(rx_sub, scale='Hz')
             else:
-                ch_row['cToneF'] = 0.0
+                ch_row['cToneFreq'] = 0.0
 
             
             ch_row['Mode'] = 'FM' if ch.rx_modulation == 'FM' else 'AM'
@@ -174,7 +185,7 @@ class ChirpGenerator(BaseGenerator):
             return "", None
             
         output_df = pd.DataFrame(rows)
-        chirp_cols = ['Location', 'Name', 'Frequency', 'Duplex', 'Offset', 'Tone', 'rToneFreq', 'cToneF', 'DtcsCode', 'DtcsPolarity', 'RxDtcsCode', 'CrossMode', 'Mode', 'TStep', 'Skip', 'Power', 'Comment', 'URCALL', 'RPT1CALL', 'RPT2CALL', 'DVCODE', 'Scan', 'TalkAround', 'Mute', 'Sign', 'TxDis', 'Bclo', 'PreDeEmphBypass']
+        chirp_cols = ['Location', 'Name', 'Frequency', 'Duplex', 'Offset', 'Tone', 'rToneFreq', 'cToneFreq', 'DtcsCode', 'DtcsPolarity', 'RxDtcsCode', 'CrossMode', 'Mode', 'TStep', 'Skip', 'Power', 'Comment', 'URCALL', 'RPT1CALL', 'RPT2CALL', 'DVCODE', 'Scan', 'TalkAround', 'Mute', 'Sign', 'TxDis', 'Bclo', 'PreDeEmphBypass']
         
         # Correcting column names for output to match Chirp format expectations if necessary
         # But the columns are defined here.
