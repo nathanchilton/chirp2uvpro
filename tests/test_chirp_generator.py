@@ -1,7 +1,7 @@
 import pandas as pd
 import io
-from converter.chirp import ChirpGenerator
-from converter.models import Channel
+from src.converter.chirp import ChirpGenerator
+from src.converter.models import Channel
 
 def test_chirp_generator_flags():
     generator = ChirpGenerator()
@@ -10,7 +10,7 @@ def test_chirp_generator_flags():
             name='Test Channel 1',
             tx_freq_hz=462550000,
             rx_freq_hz=462550000,
-            tx_sub_audio_hz=100000,
+            tx_sub_audio_hz=100.0,
             rx_sub_audio_hz=0,
             tx_power='M',
             bandwidth_hz=12500,
@@ -55,7 +55,7 @@ def test_chirp_generator_flags():
     assert int(ch1['Sign']) == 1
     assert int(ch1['TxDis']) == 1
     assert int(ch1['Bclo']) == 1
-    assert int(ch1_pre_de_emph_bypass_fix := ch1['PreDeEmphBypass']) == 1
+    assert int(ch1['PreDeEmphBypass']) == 1
     
     # Check Channel 2
     ch2 = df[df['Name'] == 'Test Channel 2'].iloc[0]

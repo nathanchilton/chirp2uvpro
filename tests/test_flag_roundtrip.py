@@ -3,14 +3,10 @@ from src.converter.chirp import ChirpParser, ChirpGenerator
 from src.converter.btech import BtechParser, BtechGenerator
 
 def test_flag_roundtrip():
-    # Original BTECH data with all flags set to True
-    btech_content = """BTECH UV
-Name,Frequency,Duplex,Offset,Tone,rToneFreq,Power,Scan,TalkAround,Mute,Sign,TxDis,Bclo,PreDeEmphBypass
-TestCh,462.55,0,0,Tone,100.0,M,1,1,1,1,1,1,1
-"""
-    # Note: I'm using 1 for True in BTECH as it's often represented as 1/0 in BTECH CSVs or similar.
-    
-    print("Starting Round-trip test for flags...")
+    # Read BTECH data from reference file
+    with open('tests/data/example_btech_format.csv', 'r') as f:
+        btech_content = f.read()
+
 
     # 1. Parse BTECH
     btech_parser = BtechParser()

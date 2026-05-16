@@ -34,7 +34,8 @@ def test_clipboard_roundtrip_data_preservation():
 
 def test_clipboard_roundtrip_csv():
     # Original CLIPBOARD content (CSV-like format)
-    original_content = 'Copy this text and start BTECH UVname,tx_freq_hz,rx_freq_hz\nTestCh,146520000,146520000'
+    with open('tests/data/example_clipboard_csv_simple.txt', 'r') as f:
+        original_content = f.read()
     
     parser = ClipboardParser()
     generator = ClipboardGenerator(format='json')
@@ -61,7 +62,8 @@ def test_clipboard_roundtrip_csv():
 def test_clipboard_roundtrip_csv_subaudio():
     # Test CSV with sub-audio frequencies
     # Use the full format produced by the generator
-    original_content = 'Copy this text and start BTECH UVname,tx_freq_hz,rx_freq_hz,tx_sub_audio_hz,rx_sub_audio_hz\nTestCh,146520000,146520000,131.8,131.8'
+    with open('tests/data/example_clipboard_csv_subaudio.txt', 'r') as f:
+        original_content = f.read()
     
     parser = ClipboardParser()
     generator = ClipboardGenerator(format='json')

@@ -20,36 +20,35 @@ def test_import_repeaters_flow(page: Page):
             });
         };
     """)
-
+    
     # 2. Navigate to the application
     page.goto(BASE_URL)
-
+    
     # 3. Ensure initial state is correct (some content might be present if we are testing pinning)
     # For a clean test, we can start with an empty textarea if needed, 
     # but here we'll check if we can trigger the import.
     
     # 4. Click the Import Repeaters button
     page.click("#import-repeaters-btn")
-
-    # 5. Wait for the result to appear.
+    
+    # 5. Wait for the import process to complete by waiting for the button to be re-enabled
+    page.wait_for_selector("#import-repeaters-btn:not([disabled])")
+    
+    # 6. Wait for the result to appear.
     # Since the backend returns mock repeaters, we expect the textarea to be updated.
     # We'll check for the text that should be in the BTECH format.
     result_locator = page.locator("#result").first
-    
-    # The import flow in main.js updates the textarea content.
-    # Let's check the textarea content in the "Text Input" tab.
-    # First, we might need to switch to the text tab if the import doesn't do it.
-    # Looking at main.js, it doesn't switch tabs, it just updates the textarea.
-    # But the textarea is in the 'text-tab-content' which is hidden by default.
-    # Wait, if it's hidden, how can we see it?
-    # Let's check the HTML. The textarea is in #text-tab-content.
-    
+
+    # If the pinning UI is shown, we need to click "Apply Import" to update the textarea
+    if result_locator.locator("#apply-import-btn").is_visible():
+        page.click("#apply-import-btn")
+
     # Let's switch to the text tab first to see the result.
     page.click("#text-tab")
-    
+
     # 6. Wait for the textarea to be updated with content from the import
     textarea_locator = page.locator('textarea[name="content"]')
-    
+
     # We expect the imported content to contain some of the mock repeater data.
     # The mock data for 45.523062, -122.676482 will be returned by the server.
     # Let's check if the content is not empty and contains something expected.
@@ -59,7 +58,7 @@ def test_import_repeaters_flow(page: Page):
     # Based on the mock implementation (which I haven't read yet, but I can guess),
     # it should contain some frequency.
     content = textarea_locator.input_value()
-    assert "BTECH UV" in content or "chs" in content
+    assert "tx_freq" in content or "chs" in content
 
 def test_import_repeaters_with_pinning(page: Page):
     """
@@ -77,26 +76,29 @@ def test_import_repeaters_with_pinning(page: Page):
             });
         };
     """)
-
+    
     # 2. Navigate to the application
     page.goto(BASE_URL)
-
+    
     # 3. Pre-fill the textarea with some existing channels
     page.click("#text-tab")
-    existing_content = 'BTECH UV{"chs":[{"n":"Existing","f":"146.000","d":"0","t":"None","dt":"None","s":"0","m":"FM"}]}'
+    existing_content = 'Copy this text and start BTECH UV{"n":"Existing","rf":146.0,"tf":146.0,"ts":131.8,"rs":131.8,"id":1,"p":0}'
     page.fill('textarea[name="content"]', existing_content)
-
+    
     # 4. Click the Import Repeaters button
     page.click("#import-repeaters-btn")
-
-    # 5. Verify that the pinning UI is displayed
+    
+    # 5. Wait for the import process to complete by waiting for the button to be re-enabled
+    page.wait_for_selector("#import-repeaters-btn:not([disabled])")
+    
+    # 6. Verify that the pinning UI is displayed
     # The pinning UI is injected into #result
     result_locator = page.locator("#result").first
     expect(result_locator.locator(".card-header")).to_contain_text("Pin existing channels")
     
-    # 6. Click "Apply Import"
+    # 7. Click "Apply Import"
     page.click("#apply-import-btn")
-
+    
     # 7. Verify that the textarea now contains BOTH the existing and the new channels
     textarea_locator = page.locator('textarea[name="content"]')
     content = textarea_locator.input_value()
@@ -105,4 +107,3 @@ def test_import_repeaters_with_pinning(page: Page):
     # We can check if the length of 'chs' array has increased or if it contains something else.
     # Since we don't know the exact mock data, we'll just check that it's not just the old content.
     assert len(content) > len(existing_content)
-
