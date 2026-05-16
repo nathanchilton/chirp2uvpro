@@ -10,7 +10,6 @@ Task: T1 - Audit all test assertions against reference files
 | `example_btech_format.csv` | Native BTECH CSV | No `BTECH UV` prefix. Columns: `title,tx_freq,rx_freq,tx_sub_audio(CTCSS=freq/DCS=number),...,talk around(...),pre_de_emph_bypass(...),...,tx_modulation(...)`. NO `duplex`, `offset`, `location`, `skip`. `talk around` has a space. Freq in Hz. Sub-audio appears to be in 0.01Hz units (13180=131.8Hz). |
 | `example_chirp_format.csv` | CHIRP CSV | `Location,Name,Frequency,Duplex,Offset,Tone,rToneFreq,cToneFreq,...`. Freq in MHz. Sub-audio in Hz. |
 | `example_clipboard_format.txt` | Clipboard JSON | `Copy this text and start BTECH UV{chs:[...]}`. Keys: n, rf, tf, ts, rs, s, id, p. Freq in MHz. Sub-audio: >1000 = CTCSS*100, ≤1000 = DCS code. |
-| `example_comprehensive_btech.csv` | Hand-crafted test data | Not a native BTECH export. Has typos (`CTCSS=fmt/`, `0=MS/1=ON`). Includes `location,skip,offset,duplex` columns not in native format. |
 
 ---
 
@@ -25,12 +24,9 @@ Task: T1 - Audit all test assertions against reference files
   - Only checks 3 fields; should verify more fields
 
 ### 2. `tests/test_comprehensive_roundtrip.py`
-- **Uses:** `example_comprehensive_btech.csv`
+- **Uses:** `example_btech_format.csv`
 - **Method:** `BtechParser` → `ChirpGenerator` → `ChirpParser` → `BtechGenerator`
 - **Checks:** name, tx_freq, rx_freq, tx_sub_audio, rx_sub_audio, tx_power, scan, talk_around, mute, sign, tx_dis, bclo, pre_de_emph_bypass
-- **Issues:**
-  - Input file is NOT a native BTECH export (has typos, extra columns)
-  - Input CSV starts with `BTECH UV\n` prefix (may affect parsing scale)
 
 ### 3. `tests/test_flag_roundtrip.py`
 - **Uses:** `example_btech_format.csv` (with `"BTECH UV\n"` prepended)

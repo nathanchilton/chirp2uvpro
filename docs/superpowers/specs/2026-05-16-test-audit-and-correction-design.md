@@ -36,9 +36,7 @@ This impacts parsing logic (the threshold was previously 2000, which may be inco
 
 ### Test Assertions That Don't Match Reference Files
 
-1. **`test_comprehensive_roundtrip.py`** — Uses `example_comprehensive_btech.csv` as input, which is NOT a ground truth reference file. It has a different column set/order than `example_btech_format.csv`. Must decide: either fix this test to use the real reference file, or update assertions to match what the comprehensive file actually contains.
-
-2. **`test_flag_roundtrip.py`** — Prepends `"BTECH UV\n"` to `example_btech_format.csv` content and parses it. This assumes the reference file needs a prefix to parse correctly. Need to verify whether the parser handles the ref file without this prefix.
+1. **`test_flag_roundtrip.py`** — Prepends `"BTECH UV\n"` to `example_btech_format.csv` content and parses it. This assumes the reference file needs a prefix to parse correctly. Need to verify whether the parser handles the ref file without this prefix.
 
 3. **`test_roundtrip.py`** — Uses `ChirpParser` to parse BTECH content, which is semantically incorrect (though functionally may work because ChirpParser detects `tx_freq` column and uses Hz scale). Should test proper BTECH→CHIRP→BTECH pipeline.
 

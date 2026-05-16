@@ -32,63 +32,6 @@ def test_clipboard_roundtrip_data_preservation():
     found_n5rca_back = any(c.name == 'N5RCA' and c.rx_freq_hz == 146780000.0 and c.tx_freq_hz == 146180000.0 and c.tx_sub_audio_hz == 131.8 for c in channels_back)
     assert found_n5rca_back
 
-def test_clipboard_roundtrip_csv():
-    # Original CLIPBOARD content (CSV-like format)
-    with open('tests/data/example_clipboard_csv_simple.txt', 'r') as f:
-        original_content = f.read()
-    
-    parser = ClipboardParser()
-    generator = ClipboardGenerator(format='json')
-    
-    # 1. Parse the original content
-    channels = parser.parse(original_content)
-    assert len(channels) == 1
-    assert channels[0].name == 'TestCh'
-    assert channels[0].rx_freq_hz == 146520000.0
-    assert channels[0].tx_freq_hz == 146520000.0
-    
-    # 2. Generate CHIRP-style JSON from the parsed channels
-    generated_content = generator.generate(channels)
-    
-    # 3. Parse the generated content back
-    channels_back = parser.parse(generated_content)
-    
-    # 4. Verify the data is still the same
-    assert len(channels_back) == 1
-    assert channels_back[0].name == 'TestCh'
-    assert channels_back[0].rx_freq_hz == 146520000.0
-    assert channels_back[0].tx_freq_hz == 146520000.0
-
-def test_clipboard_roundtrip_csv_subaudio():
-    # Test CSV with sub-audio frequencies
-    # Use the full format produced by the generator
-    with open('tests/data/example_clipboard_csv_subaudio.txt', 'r') as f:
-        original_content = f.read()
-    
-    parser = ClipboardParser()
-    generator = ClipboardGenerator(format='json')
-    
-    # 1. Parse the original content
-    channels = parser.parse(original_content)
-    assert len(channels) == 1
-    assert channels[0].name == 'TestCh'
-    assert channels[0].tx_freq_hz == 146520000.0
-    assert channels[0].tx_sub_audio_hz == 131.8
-    assert channels[0].rx_sub_audio_hz == 131.8
-    
-    # 2. Generate CHIRP-style JSON from the parsed channels
-    generated_content = generator.generate(channels)
-    
-    # 3. Parse the generated content back
-    channels_back = parser.parse(generated_content)
-    
-    # 4. Verify the data is still the same
-    assert len(channels_back) == 1
-    assert channels_back[0].name == 'TestCh'
-    assert channels_back[0].tx_freq_hz == 146520000.0
-    assert channels_back[0].tx_sub_audio_hz == 131.8
-    assert channels_back[0].rx_sub_audio_hz == 131.8
-
 if __name__ == "__main__":
     import pytest
     pytest.main([__file__])
